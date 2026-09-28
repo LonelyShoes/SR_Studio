@@ -1,0 +1,22 @@
+# Dependencies
+node_modules/
+
+# Build output (Vercel build ulang otomatis dari source)
+dist/
+*.zip
+
+# Env & lokal
+.env
+.env.*
+.vercel/
+*.log
+npm-debug.log*
+
+# Script uji coba lokal
+scratch/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readdirSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_DATABASE_URL } from './services/cloud/config.js';
@@ -48,6 +48,24 @@ describe('konfigurasi deploy', () => {
     expect(rewrite.test('/sw.js')).toBe(false);
     const swRule = rootConfig.headers.find((rule) => rule.source === '/sw.js');
     expect(swRule.headers[0].value).toContain('no-cache');
+  });
+
+  it('kode sumber tidak membaca objek import.meta.env secara utuh', () => {
+    // Akses utuh membuat Vite menanamkan semua variabel VITE_* lingkungan build
+    // (mis. metadata deployment) ke bundle publik. Yang diizinkan hanya akses per kunci.
+    const offenders = [];
+    const walk = (directory) => {
+      for (const entry of readdirSync(directory, { withFileTypes: true })) {
+        const full = resolve(directory, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (/\.(js|jsx)$/.test(entry.name) && !/\.test\./.test(entry.name)) {
+          const withoutComments = readFileSync(full, 'utf8').replace(/\/\*[\s\S]*?\*\/|\/\/.*$/gm, '');
+          if (/import\.meta\.env(?!\.[A-Z_]+\b)/.test(withoutComments)) offenders.push(entry.name);
+        }
+      }
+    };
+    walk(resolve(process.cwd(), 'src'));
+    expect(offenders).toEqual([]);
   });
 
   it('aturan database hanya membuka akar milik aplikasi & membekukan data lama', () => {

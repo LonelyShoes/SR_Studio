@@ -3,32 +3,32 @@
  *
  * Semua nilai bisa di-override lewat environment variable Vite (`VITE_*`) saat build,
  * sehingga tidak ada rahasia/alamat yang perlu diubah langsung di kode sumber.
+ *
+ * Catatan: setiap variabel diakses secara statis (`import.meta.env.VITE_NAMA`). Jangan membaca
+ * objek `import.meta.env` secara utuh — Vite akan menanamkan SEMUA variabel `VITE_*` milik
+ * lingkungan build (termasuk metadata deployment Vercel) ke dalam bundle publik.
  */
 
-const env = (typeof import.meta !== 'undefined' && import.meta.env) || {};
+import { MASTER_CODE_ITERATIONS, MASTER_CODE_SALT } from './masterCodeParams.js';
 
-const readEnv = (key, fallback) => {
-  const value = env[key];
-  return typeof value === 'string' && value.trim() ? value.trim() : fallback;
-};
+const orDefault = (value, fallback) => (typeof value === 'string' && value.trim() ? value.trim() : fallback);
 
 /** Akun pemilik workspace (hanya ditampilkan sebagai kontak di UI). */
-export const MASTER_EMAIL = readEnv('VITE_MASTER_EMAIL', 'muhrafi118b@gmail.com');
+export const MASTER_EMAIL = orDefault(import.meta.env.VITE_MASTER_EMAIL, 'muhrafi118b@gmail.com');
 
 /**
  * Hash PBKDF2-SHA256 dari Master Code. Kode aslinya TIDAK disimpan di kode sumber.
  * Buat hash baru dengan: `npm run hash:master -- <kode-baru>` lalu set VITE_MASTER_CODE_HASH.
  */
-export const MASTER_CODE_HASH = readEnv(
-  'VITE_MASTER_CODE_HASH',
+export const MASTER_CODE_HASH = orDefault(
+  import.meta.env.VITE_MASTER_CODE_HASH,
   'cfdd21ed28c90a1a16889c293ea4952edc485be4435f56ef206fafcf10914d9f'
 );
-export const MASTER_CODE_SALT = 'sr-studio:master:v1';
-export const MASTER_CODE_ITERATIONS = 100000;
+export { MASTER_CODE_ITERATIONS, MASTER_CODE_SALT };
 
 /** Firebase Realtime Database bawaan proyek. */
-export const DEFAULT_DATABASE_URL = readEnv(
-  'VITE_FIREBASE_DATABASE_URL',
+export const DEFAULT_DATABASE_URL = orDefault(
+  import.meta.env.VITE_FIREBASE_DATABASE_URL,
   'https://sr-tool-94937-default-rtdb.asia-southeast1.firebasedatabase.app'
 );
 
@@ -36,7 +36,7 @@ export const DEFAULT_DATABASE_URL = readEnv(
  * ID workspace. Nilai bawaan sama dengan namespace sinkronisasi versi lama
  * (hash email master) agar data lama bisa dimigrasikan tanpa konfigurasi tambahan.
  */
-export const WORKSPACE_ID = readEnv('VITE_WORKSPACE_ID', 'sr_boq_78odeb');
+export const WORKSPACE_ID = orDefault(import.meta.env.VITE_WORKSPACE_ID, 'sr_boq_78odeb');
 
 /** Akar data realtime (skema v3) dan lokasi blob versi lama (dibiarkan utuh sebagai cadangan). */
 export const WORKSPACE_ROOT = `sr_studio_v3/${WORKSPACE_ID}`;

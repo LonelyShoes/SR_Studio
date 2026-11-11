@@ -8,7 +8,7 @@
  * pernah perlu disimpan di repositori.
  */
 import { pbkdf2Sync } from 'node:crypto';
-import { MASTER_CODE_ITERATIONS, MASTER_CODE_SALT } from '../src/services/cloud/config.js';
+import { MASTER_CODE_ITERATIONS, MASTER_CODE_SALT } from '../src/services/cloud/masterCodeParams.js';
 
 const code = (process.argv[2] || '').trim();
 

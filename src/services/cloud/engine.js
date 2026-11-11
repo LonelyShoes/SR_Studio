@@ -38,6 +38,8 @@ import { blankState, calcTotals, isMeaningfulState, normalizeLibrary } from '../
 
 const AUTO_REVISION_KEY = 'sr_studio_auto_revision_at_v3';
 const RETRY_DELAYS_MS = [4000, 15000, 60000];
+const MIGRATION_WAIT_MS = 2000;
+const MIGRATION_WAIT_ATTEMPTS = 70; // ± 140 detik, sedikit di atas masa berlaku kunci migrasi
 
 const boqTree = (state) => (state ? sanitizeTree(stateToDoc(state)) : undefined);
 const scheduleTree = (schedule) => sanitizeTree(scheduleToDoc(schedule));
@@ -272,7 +274,13 @@ export class SyncEngine {
       const recheckDue = role === 'master' && Date.now() - lastCheck > this.limits.legacyRecheckMs;
       let migration = null;
       if (!lastCheck || recheckDue) {
-        const result = await migrateLegacyCloud(this.workspace);
+        let result = await migrateLegacyCloud(this.workspace);
+        // Perangkat lain sedang memigrasikan: tunggu sampai selesai (atau kuncinya kedaluwarsa)
+        // agar proyek yang belum sempat dibuat tidak terbaca sebagai "tidak ada".
+        for (let attempt = 0; result.reason === 'locked' && attempt < MIGRATION_WAIT_ATTEMPTS && !this.disposed; attempt++) {
+          await new Promise((resolve) => setTimeout(resolve, MIGRATION_WAIT_MS));
+          result = await migrateLegacyCloud(this.workspace);
+        }
         this.store.setRaw(STORAGE_KEYS.legacyCheckAt, String(Date.now()));
         if (!result.skipped) migration = { cloud: result.report };
       }
@@ -318,6 +326,7 @@ export class SyncEngine {
         this.#rebuildLibrary();
         this.#emit({ libraryReady: true });
         this.#scheduleSummaryReconcile();
+        this.#maybeAutoCreate();
       }, onError),
       this.workspace.watchPresence((presence) => this.#emit({ presence }), onError),
       this.workspace.watchActivity((activity) => this.#emit({ activity }), onError),
@@ -856,11 +865,59 @@ export class SyncEngine {
 
   /* ================================================================ Membuat dokumen */
 
-  /** Area kerja lokal yang berisi & belum punya dokumen cloud otomatis dijadikan draf realtime. */
+  /**
+   * Area kerja lokal yang berisi tetapi belum punya dokumen cloud:
+   *  - bila isinya identik dengan proyek tersimpan bernama sama (perangkat lama yang kehilangan
+   *    tautan ke proyeknya) → disambungkan ke proyek itu, tanpa membuat duplikat;
+   *  - selain itu → otomatis dijadikan draf realtime.
+   */
   #maybeAutoCreate() {
-    if (!this.ready || this.session || this.creating || !this.canWrite) return;
+    if (!this.ready || this.session || this.creating || !this.canWrite || !this.cloudEntries) return;
     if (!isMeaningfulState(this.local.state)) return;
-    this.createFromLocal({ status: 'draft' });
+
+    const name = (this.local.state.project?.name || '').trim().toLowerCase();
+    const candidates = name
+      ? [...this.cloudEntries.values()].filter((entry) => entry.status !== 'draft' && entry.name.trim().toLowerCase() === name)
+      : [];
+    if (candidates.length === 0) {
+      this.createFromLocal({ status: 'draft' });
+      return;
+    }
+
+    this.creating = true;
+    this.#relinkOrCreate(candidates)
+      .catch((error) => console.warn('[SR Studio] Area kerja belum dapat disambungkan ke cloud:', error))
+      .finally(() => {
+        this.creating = false;
+      });
+  }
+
+  async #relinkOrCreate(candidates) {
+    let match = null;
+    for (const entry of candidates) {
+      const record = await this.ensureSnapshot(entry.id);
+      if (record?.stateSnapshot && treeEqual(boqTree(record.stateSnapshot), this.trees.boq)) {
+        match = entry;
+        break;
+      }
+    }
+    // Keadaan bisa berubah selama menunggu snapshot (pengguna mengetik, dokumen dibuka, dsb.).
+    if (this.session || !this.ready || !this.canWrite || !isMeaningfulState(this.local.state)) return;
+    const stillIdentical =
+      match && treeEqual(boqTree(this.cacheRecords.get(match.id)?.stateSnapshot), this.trees.boq);
+
+    if (!stillIdentical) {
+      this.createFromLocal({ status: 'draft' });
+      return;
+    }
+
+    // Isian kalkulator & jadwal milik area kerja ikut ke proyek (digabung; data cloud menang).
+    this.calcStore.renameScope(match.id);
+    this.#startSession(match.id, {
+      bases: { boq: this.trees.boq, schedule: UNKNOWN_BASE, calc: UNKNOWN_BASE },
+    });
+    this.hooks.onDocChange(match.id, { reason: 'relink', name: match.name });
+    this.commit();
   }
 
   /**

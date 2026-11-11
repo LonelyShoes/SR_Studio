@@ -42,6 +42,7 @@ function createDevice(server, { role = 'master', name = 'Master', id = 'pc', sto
       onDocChange: (nextDocId, info) => {
         ui.docId = nextDocId;
         ui.docEvents.push(info.reason);
+        if (info.reason === 'relink') ui.state = { ...ui.state, project: { ...ui.state.project, libraryId: nextDocId } };
         if (info.reason === 'open') {
           ui.state = info.state || blankState('2026-01-01');
           ui.schedule = info.schedule || null;
@@ -456,6 +457,68 @@ describe('SyncEngine: persistensi & pembaruan dari versi lama', () => {
     expect(second.ui.docEvents).toContain('diverged');
     expect(second.ui.state.categories[0].items[0].volume).toBe(600);
     expect(workspaceTree(server).docs[docId].boq.cats.persiapan.items['persiapan-0'].volume).toBe(6);
+  });
+
+  it('area kerja lama yang identik dengan proyek tersimpan ditautkan kembali (tanpa draf duplikat)', async () => {
+    const server = new MemoryServer();
+    const author = createDevice(server);
+    await tick();
+    author.rename('Kontrakan Uji');
+    author.setVolume(0, 0, 8);
+    await tick();
+    const docId = author.ui.docId;
+    await author.engine.promoteDraft(docId);
+    await tick();
+
+    // Perangkat lama: isi sama persis, tetapi tautan ke proyek hilang (tidak ada dokumen aktif)
+    // dan punya isian kalkulator yang hanya ada di perangkat itu.
+    const orphanState = normalizeState(JSON.parse(JSON.stringify(author.ui.state)));
+    orphanState.project.libraryId = null;
+    const old = createDevice(server, { id: 'lama', name: 'Master Lama', state: orphanState });
+    old.calcStore.set('sr_calc_cl_rooms', '[{"nama":"Kamar 1"}]');
+    await tick(4000);
+
+    expect(old.ui.docEvents).toEqual(['relink']);
+    expect(old.ui.docId).toBe(docId);
+    expect(author.library().map((entry) => entry.id)).toEqual([docId]); // tidak ada draf baru
+    expect(workspaceTree(server).docs[docId].calc.sr_calc_cl_rooms).toBe('[{"nama":"Kamar 1"}]');
+    expect(author.calcStore.get('sr_calc_cl_rooms')).toBe('[{"nama":"Kamar 1"}]');
+
+    // Bernama sama tetapi isinya berbeda → tetap dijadikan draf (proyek asli tidak tersentuh).
+    const different = normalizeState(JSON.parse(JSON.stringify(author.ui.state)));
+    different.project.libraryId = null;
+    different.categories[0].items[0].volume = 80;
+    const other = createDevice(server, { id: 'lain', name: 'Master Lain', state: different });
+    await tick(4000);
+    expect(other.ui.docEvents).toEqual(['create']);
+    expect(other.ui.docId).not.toBe(docId);
+    expect(workspaceTree(server).docs[docId].boq.cats.persiapan.items['persiapan-0'].volume).toBe(8);
+    expect(author.library().find((entry) => entry.id === other.ui.docId)).toMatchObject({ status: 'draft', name: 'Kontrakan Uji' });
+  });
+
+  it('dua perangkat memulai bersamaan saat migrasi pertama: tidak ada dokumen yang salah dilepas', async () => {
+    const legacyState = ensureOrder({ ...blankState('2026-08-01'), project: { ...blankState().project, name: 'Proyek Lama' } });
+    legacyState.categories[0].items[0].volume = 3;
+    const legacyProject = {
+      id: 'proj_lama', name: 'Proyek Lama', createdAt: '2026-08-01T00:00:00.000Z', updatedAt: '2026-10-01T00:00:00.000Z',
+      stateSnapshot: legacyState, revisions: [],
+    };
+    const [root, ns] = LEGACY_LIBRARY_PATH.split('/');
+    const server = new MemoryServer({ [root]: { [ns]: { updatedAt: '2026-10-30T00:00:00.000Z', library: [legacyProject] } } });
+
+    const first = createDevice(server, { id: 'pc-1', name: 'PC 1' });
+    const second = createDevice(server, {
+      id: 'pc-2',
+      name: 'PC 2',
+      state: normalizeState(JSON.parse(JSON.stringify(legacyState))),
+      docId: 'proj_lama',
+    });
+    await tick(10000);
+
+    expect(second.ui.docId).toBe('proj_lama');
+    expect(second.ui.docEvents).toEqual([]);
+    expect(first.library().map((entry) => entry.id)).toEqual(['proj_lama']);
+    expect(second.library().every((entry) => entry.status === 'saved')).toBe(true);
   });
 
   it('backup & impor: ekspor memuat snapshot + revisi; impor memulihkan proyek', async () => {

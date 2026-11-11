@@ -57,6 +57,8 @@ header keamanan & fallback SPA yang sama.
 - Migrasi otomatis & idempoten dari data versi 2 (cloud + Library lokal tiap perangkat). Data versi 2 tidak diubah
   dan tetap menjadi cadangan. Diverifikasi: 6 proyek + seluruh revisi identik (total, item, volume).
 - Salinan kerja lokal yang berbeda dari cloud tidak pernah menimpa proyek bersama — dijadikan draf terpisah.
+- Area kerja lama yang isinya identik dengan proyek tersimpan disambungkan kembali ke proyeknya (isian kalkulator
+  di perangkat ikut terunggah) — tidak membuat draf kembar. Perangkat menunggu bila migrasi sedang dikerjakan perangkat lain.
 
 **Keamanan**
 - Master Code tidak lagi tampil di halaman depan dan tidak ada di bundle (verifikasi hash PBKDF2).
@@ -77,7 +79,7 @@ header keamanan & fallback SPA yang sama.
 
 **Kualitas kode & performa**
 - BoQContext 1.555 baris dipecah: transisi state murni (`boqActions`), engine sinkronisasi tanpa React, driver.
-- ESLint 364 masalah → 0 (`--max-warnings 0`). Unit test 18 → 104 (termasuk simulasi multi-perangkat & offline).
+- ESLint 364 masalah → 0 (`--max-warnings 0`). Unit test 18 → 109 (termasuk simulasi multi-perangkat & offline).
 - Bundle awal 595 kB → 230 kB + React 143 kB (gzip 187 kB → 111 kB); xlsx & Firebase dimuat saat dibutuhkan.
 - Dependensi tak terpakai dibuang; peringatan keamanan dependensi produksi 5 → 1 (xlsx, hanya dipakai menulis file).
 

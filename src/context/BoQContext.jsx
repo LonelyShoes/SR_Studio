@@ -171,6 +171,11 @@ export function BoQProvider({ children }) {
             return info.name ? { ...linked, project: { ...linked.project, name: info.name } } : linked;
           });
           break;
+        case 'relink':
+          // Area kerja lama ternyata identik dengan proyek tersimpan → cukup ditautkan kembali.
+          setStateRaw(linkTo(docId));
+          showToast(`Area kerja tersambung kembali ke proyek "${info.name || 'Library'}" (isi identik).`, 'info');
+          break;
         case 'reset':
           setStateRaw(blankState());
           setScheduleRaw(null);

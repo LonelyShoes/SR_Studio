@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Mengemas folder `dist/` menjadi `sr-studio-vercel-dist.zip` (untuk deploy drag & drop).
  * Penulis ZIP kecil berbasis `node:zlib` — tanpa dependensi dan tanpa alat sistem, sehingga

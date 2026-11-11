@@ -1,0 +1,8 @@
+# Akhir baris LF di semua sistem operasi (selaras dengan Prettier & build Vercel).
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.zip binary

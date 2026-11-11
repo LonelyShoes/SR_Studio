@@ -96,6 +96,7 @@ npm run check      # lint (0 peringatan) + test + build
 | `npm run lint` · `npm test` | ESLint (`--max-warnings 0`) · Vitest |
 | `npm run package` | Membuat `sr-studio-vercel-dist.zip` dari `dist/` (deploy drag & drop) |
 | `npm run hash:master -- <kode>` | Membuat hash Master Code baru |
+| `npm run verify:cloud` | Verifikasi **baca-saja**: membandingkan data versi lama dengan dokumen realtime v3 di cloud |
 
 Konfigurasi opsional lewat environment variable — lihat [`.env.example`](./.env.example). Untuk bereksperimen
 tanpa menyentuh data asli, jalankan dengan workspace terpisah: `VITE_WORKSPACE_ID=uji_coba npm run dev`.

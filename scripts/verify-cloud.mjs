@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 /**
  * Verifikasi BACA-SAJA hasil migrasi cloud (v2 → v3). Tidak menulis apa pun ke database.
  *

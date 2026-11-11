@@ -58,7 +58,8 @@ Build command `npm run build`, output directory `dist`. Berkas `_headers` dan `_
 
 1. Buka situs → masuk sebagai Master → indikator di bar atas menunjukkan **Realtime**.
 2. Buka situs di perangkat kedua → ubah satu volume → perubahan muncul di perangkat pertama tanpa refresh.
-3. **Sekali saja:** terapkan `database.rules.json` di Firebase Console → Realtime Database → Rules → Publish.
+3. Jalankan `npm run verify:cloud` (baca-saja) untuk memastikan semua proyek versi lama sudah ada di cloud realtime dengan isi yang sama.
+4. **Sekali saja:** terapkan `database.rules.json` di Firebase Console → Realtime Database → Rules → Publish.
 
 ## Konfigurasi opsional (environment variable)
 

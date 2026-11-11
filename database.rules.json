@@ -1,0 +1,14 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "sr_studio_v3": {
+      ".read": true,
+      ".write": true
+    },
+    "sr_studio_library": {
+      ".read": true,
+      ".write": false
+    }
+  }
+}

@@ -1,6 +1,6 @@
 import React from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { CheckCircle2, ArrowRight, RotateCcw, X, Layers } from 'lucide-react';
+import { CheckCircle2, RotateCcw, X, Layers } from 'lucide-react';
 import { formatNumber } from '../../utils/formatters';
 
 export function SendToBoQModal() {

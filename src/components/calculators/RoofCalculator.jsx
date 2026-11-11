@@ -1,20 +1,14 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { formatNumber, parseNum, formatRp } from '../../utils/formatters';
+import { parseNum, formatRp } from '../../utils/formatters';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
-import { 
-  ArrowLeft, 
-  Home, 
-  Send, 
-  Layers, 
-  Check, 
-  Info, 
-  Sparkles, 
-  RotateCcw,
-  Sliders,
-  DollarSign,
-  Maximize2,
-  Compass
+import {
+  ArrowLeft,
+  Home,
+  Send,
+  Layers,
+  Info,
+  Compass,
 } from 'lucide-react';
 import { RoofTrussStudio } from './RoofTrussStudio';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
@@ -627,7 +621,7 @@ export function RoofCalculator() {
                   <div>
                     <div className="font-bold text-slate-900">Baja Ringan Truss C75.75 (Kuda-kuda Utama)</div>
                     <div className="text-[11px] text-slate-500 font-mono">
-                      {calc.trussMeter.toFixed(1)} m' &bull; <strong>{calc.trussBatang} Batang</strong> (panjang 6m)
+                      {calc.trussMeter.toFixed(1)} m&apos; &bull; <strong>{calc.trussBatang} Batang</strong> (panjang 6m)
                     </div>
                   </div>
                 </label>
@@ -654,7 +648,7 @@ export function RoofCalculator() {
                   <div>
                     <div className="font-bold text-slate-900">Reng Baja Ringan R.32 (0.45mm)</div>
                     <div className="text-[11px] text-slate-500 font-mono">
-                      {calc.rengMeter.toFixed(1)} m' &bull; <strong>{calc.rengBatang} Batang</strong> (panjang 6m)
+                      {calc.rengMeter.toFixed(1)} m&apos; &bull; <strong>{calc.rengBatang} Batang</strong> (panjang 6m)
                     </div>
                   </div>
                 </label>
@@ -716,7 +710,7 @@ export function RoofCalculator() {
                         )}
                       </div>
                       <div className="text-[11px] text-slate-500 font-mono">
-                        Panjang <strong>{calc.ridgeLength.toFixed(1)} m'</strong> &bull; <strong>{calc.nokQty} Buah</strong>
+                        Panjang <strong>{calc.ridgeLength.toFixed(1)} m&apos;</strong> &bull; <strong>{calc.nokQty} Buah</strong>
                       </div>
                     </div>
                   </label>
@@ -776,7 +770,7 @@ export function RoofCalculator() {
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-500 font-mono">
-                        Panjang <strong>{calc.perimeterLisplang.toFixed(1)} m'</strong> &bull; <strong>{calc.lisplangQty} Lembar</strong> (papan 2.4m)
+                        Panjang <strong>{calc.perimeterLisplang.toFixed(1)} m&apos;</strong> &bull; <strong>{calc.lisplangQty} Lembar</strong> (papan 2.4m)
                       </div>
                     </div>
                   </label>
@@ -923,7 +917,7 @@ export function RoofCalculator() {
                         </span>
                       </div>
                       <div className="text-[11px] text-slate-500 font-mono">
-                        Panjang <strong>{(calc.talangMeter || 0).toFixed(1)} m'</strong>
+                        Panjang <strong>{(calc.talangMeter || 0).toFixed(1)} m&apos;</strong>
                       </div>
                     </div>
                   </label>
@@ -934,7 +928,7 @@ export function RoofCalculator() {
                       onChange={(e) => setHargaTalang(e.target.value)}
                       className="w-full text-right px-2 py-1 bg-slate-50 border border-slate-200 rounded text-xs font-mono font-bold"
                     />
-                    <span className="text-[9px] text-slate-400 text-right block">Rp / m'</span>
+                    <span className="text-[9px] text-slate-400 text-right block">Rp / m&apos;</span>
                   </div>
                 </div>
 
@@ -1176,7 +1170,7 @@ checked={sendSekrup}
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
                 <span className="text-[10px] font-bold text-slate-500 uppercase block">Panjang Garis Nok</span>
                 <span className="text-lg font-black font-mono text-slate-800">
-                  {calc.ridgeLength.toFixed(1)} m'
+                  {calc.ridgeLength.toFixed(1)} m&apos;
                 </span>
                 <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
                   {calc.nokQty} keping bubungan
@@ -1186,7 +1180,7 @@ checked={sendSekrup}
               <div className="p-3 rounded-2xl bg-slate-50 border border-slate-200">
                 <span className="text-[10px] font-bold text-slate-500 uppercase block">Keliling Lisplang</span>
                 <span className="text-lg font-black font-mono text-slate-800">
-                  {calc.perimeterLisplang.toFixed(1)} m'
+                  {calc.perimeterLisplang.toFixed(1)} m&apos;
                 </span>
                 <span className="text-[10px] text-slate-400 block mt-0.5 font-mono">
                   {calc.lisplangQty} lembar papan

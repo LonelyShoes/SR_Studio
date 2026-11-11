@@ -1,60 +1,23 @@
 /**
- * Cloud Services Modular Barrel Export
- * Menggabungkan seluruh modul Cloud Sync, Auth, Firebase, OTP, dan Deletion Tombstones
+ * Layanan cloud SR Studio — titik masuk modul.
+ *
+ *  config.js      konfigurasi (env), kunci storage, batas
+ *  tree.js        diff / patch / 3-way merge pohon JSON
+ *  keys.js        encoding kunci RTDB & peta path
+ *  codec.js       state aplikasi ⇄ dokumen cloud
+ *  crypto.js      SHA-256 / PBKDF2 (WebCrypto + fallback)
+ *  outbox.js      write-ahead log persisten
+ *  syncChannel.js pengikat realtime satu pohon ⇄ satu path
+ *  workspace.js   operasi proyek, revisi, sampah, presence, aktivitas, OTP
+ *  migration.js   impor data versi lama (non-destruktif)
+ *  engine.js      orkestrator (bootstrap, sesi dokumen, Library, status)
+ *  identity.js    identitas perangkat & verifikasi Master Code
+ *  drivers/       driver Firebase (produksi) & memori (pengujian)
  */
 
-// 1. Constants & Credentials
-export {
-  FIXED_MASTER_EMAIL,
-  FIXED_MASTER_CODE,
-  PRIMARY_CLOUD_CHANNEL_ID,
-  PRIMARY_CLOUD_URL,
-  DEFAULT_FIREBASE_DB_URL,
-  CLOUD_CONFIG_KEY,
-  MASTER_DEVICE_KEY,
-  ACTIVE_OTP_KEY,
-  USED_OTPS_KEY,
-  DELETED_IDS_KEY,
-  FIREBASE_CONFIG_KEY,
-  hashMasterEmail
-} from './constants.js';
-
-// 2. Deleted Projects (Tombstones)
-export {
-  getDeletedProjectIds,
-  saveDeletedProjectIds,
-  addDeletedProjectId
-} from './deletedProjectsService.js';
-
-// 3. Master Authentication & Device Authorization
-export {
-  getCloudConfig,
-  saveCloudConfig,
-  verifyMasterPin,
-  logoutMasterDevice
-} from './masterAuthService.js';
-
-// 4. Firebase Realtime Database
-export {
-  getFirebaseConfig,
-  saveFirebaseConfig,
-  testFirebaseConnection
-} from './firebaseService.js';
-
-// 5. OTP (One-Time Password) & Security
-export {
-  getUsedOtps,
-  markOtpAsUsed,
-  getAlgorithmicOtps,
-  syncOtpToFirebase,
-  generateCurrentOtp,
-  verifyAndConsumeOtp
-} from './otpService.js';
-
-// 6. Library Synchronization & QR
-export {
-  mergeLibraries,
-  uploadLibraryToCloud,
-  fetchLibraryFromCloud,
-  getCloudSyncQrUrl
-} from './librarySyncService.js';
+export * from './config.js';
+export { SyncEngine } from './engine.js';
+export { WorkspaceClient, OfflineError, OTP_ATTEMPT_LIMIT } from './workspace.js';
+export { SyncChannel } from './syncChannel.js';
+export { Outbox, replayOutbox } from './outbox.js';
+export * from './identity.js';

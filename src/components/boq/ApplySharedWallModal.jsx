@@ -1,20 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  X, 
-  Check, 
-  Sparkles, 
-  Info, 
-  TrendingDown, 
-  Building2, 
-  Layers, 
-  CheckSquare, 
-  Square, 
-  RotateCcw,
-  Sliders,
-  Percent,
+import {
+  X,
+  Sparkles,
+  TrendingDown,
+  CheckSquare,
+  Square,
   AlertTriangle,
-  ShieldCheck
+  ShieldCheck,
 } from 'lucide-react';
 import { formatRp, formatNumber, parseNum } from '../../utils/formatters';
 
@@ -23,7 +16,6 @@ export function ApplySharedWallModal({ isOpen, onClose }) {
     state, 
     applySharedWallReduction, 
     clusterRowUnits, 
-    clusterUnits 
   } = useBoQ();
 
   // Preset reduksi: default 25% (standar deret kavling 3-6 unit)

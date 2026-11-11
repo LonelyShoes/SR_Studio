@@ -1,34 +1,30 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { CONCRETE_MIX, DENSITIES } from '../../data/calculatorConstants';
-import { formatNumber, parseNum, formatRp } from '../../utils/formatters';
+import { formatNumber, parseNum } from '../../utils/formatters';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { StructuralCrossSectionVisualizer } from '../common/StructuralCrossSectionVisualizer';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
-import { 
-  ArrowLeft, 
-  Layers, 
-  Plus, 
-  Trash2, 
-  Send, 
-  Droplet, 
-  Sparkles,
-  Info,
-  Sliders,
-  Check,
+import {
+  ArrowLeft,
+  Layers,
+  Plus,
+  Trash2,
+  Send,
+  Droplet,
   Building,
-  Maximize2
+  Maximize2,
 } from 'lucide-react';
 
 export function ConcreteCalculator() {
-  const { 
-    setActiveTab, 
-    queueCalculatedItems, 
-    showToast, 
-    clusterUnits, 
-    updateClusterUnits, 
-    clusterTypology, 
-    clusterRowUnits 
+  const {
+    setActiveTab,
+    queueCalculatedItems,
+    showToast,
+    clusterUnits,
+    updateClusterUnits,
+    clusterTypology,
+    clusterRowUnits
   } = useBoQ();
 
   const [currentMutu, setCurrentMutu] = usePersistentState('sr_calc_cc_mutu', 'K250');
@@ -200,12 +196,12 @@ export function ConcreteCalculator() {
     const isBoundary = (currentType === 'sloof' || currentType === 'kolom' || currentType === 'balok') && inIsBoundary;
 
     setElements(prev => [
-      ...prev, 
-      { 
-        id: Date.now(), 
-        type: label, 
-        dimText, 
-        jumlah: qty, 
+      ...prev,
+      {
+        id: Date.now(),
+        type: label,
+        dimText,
+        jumlah: qty,
         volume,
         bondek,
         wiremesh,
@@ -213,7 +209,7 @@ export function ConcreteCalculator() {
         isSharedBoundary: isBoundary
       }
     ]);
-    
+
     // Clear inputs
     setInPanjang('');
     setInLebar('');
@@ -235,20 +231,12 @@ export function ConcreteCalculator() {
   };
 
   // Base Single-Unit Calculations
-  const baseVolume = useMemo(() => {
-    return elements.reduce((acc, el) => acc + el.volume, 0);
-  }, [elements]);
-
   const baseBondek = useMemo(() => {
     return elements.reduce((acc, el) => acc + (el.bondek || 0), 0);
   }, [elements]);
 
   const baseWiremesh = useMemo(() => {
     return elements.reduce((acc, el) => acc + (el.wiremesh || 0), 0);
-  }, [elements]);
-
-  const baseBekisting = useMemo(() => {
-    return elements.reduce((acc, el) => acc + (el.bekisting || 0), 0);
   }, [elements]);
 
   // Effective Multiplier Factor & Shared Wall Calculation
@@ -310,8 +298,6 @@ export function ConcreteCalculator() {
     }
 
     const pSemen = parseNum(hargaSemen);
-    const pPasir = parseNum(hargaPasir);
-    const pKerikil = parseNum(hargaKerikil);
     const pBondek = parseNum(hargaBondek) || 125000;
     const pWiremesh = parseNum(hargaWiremesh) || 550000;
     const pBekisting = parseNum(hargaBekisting) || 165000;
@@ -430,7 +416,7 @@ export function ConcreteCalculator() {
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-4 sm:p-7 border border-slate-800 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-72 sm:w-80 h-72 sm:h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[11px] sm:text-xs font-mono font-bold tracking-wide truncate">
@@ -460,7 +446,7 @@ export function ConcreteCalculator() {
       </div>
 
       {/* REUSABLE CLUSTER MULTIPLIER TOOLBAR */}
-      <ClusterMultiplierBar 
+      <ClusterMultiplierBar
         multiplier={clusterUnits}
         onChange={updateClusterUnits}
         applyMode={clusterApplyMode}
@@ -556,7 +542,7 @@ export function ConcreteCalculator() {
 
         {/* Form Inputs */}
         <form onSubmit={handleAddElement} className={currentType === 'volume' || currentType === 'tangga' ? "pt-3 border-t border-paper-200" : ""}>
-          
+
           {/* A. Sloof & Balok */}
           {(currentType === 'sloof' || currentType === 'balok') && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 mb-4 animate-fadeIn">
@@ -665,7 +651,7 @@ export function ConcreteCalculator() {
                   <Building className="w-4 h-4 text-blue-600" />
                   Parameter Pelat Lantai Bertingkat
                 </span>
-                
+
                 {/* Metode Toggle */}
                 <div className="inline-flex rounded-xl bg-white p-1 border border-blue-200 text-xs font-bold">
                   <button
@@ -1017,20 +1003,20 @@ export function ConcreteCalculator() {
         {/* Composition Bar */}
         <div>
           <div className="h-7 rounded-lg overflow-hidden border border-paper-400 flex text-[10px] font-mono font-bold text-white text-center">
-            <div 
-              style={{ width: `${pctSemen || 33}%` }} 
+            <div
+              style={{ width: `${pctSemen || 33}%` }}
               className="bg-paper-900 flex items-center justify-center transition-all duration-300"
             >
               SEMEN
             </div>
-            <div 
-              style={{ width: `${pctPasir || 33}%` }} 
+            <div
+              style={{ width: `${pctPasir || 33}%` }}
               className="bg-amber-600 flex items-center justify-center transition-all duration-300"
             >
               PASIR
             </div>
-            <div 
-              style={{ width: `${pctKerikil || 34}%` }} 
+            <div
+              style={{ width: `${pctKerikil || 34}%` }}
               className="bg-slate-500 flex items-center justify-center transition-all duration-300"
             >
               KERIKIL
@@ -1055,7 +1041,7 @@ export function ConcreteCalculator() {
 
         {/* Material Cards Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          
+
           <div className="p-4 rounded-2xl bg-paper-900 text-white shadow-sm flex flex-col justify-between">
             <span className="text-[10px] font-mono uppercase tracking-widest text-paper-300 font-bold">Semen Portland</span>
             <div className="my-2">

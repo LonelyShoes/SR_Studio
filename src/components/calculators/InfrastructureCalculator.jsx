@@ -1,21 +1,13 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { formatNumber, parseNum, formatRp } from '../../utils/formatters';
-import { 
-  ArrowLeft, 
-  Send, 
-  Layers, 
-  Check, 
-  Info, 
-  Sparkles, 
-  Route, 
-  Trees, 
-  ShieldCheck, 
-  Building, 
-  Box, 
-  Compass, 
-  Grid, 
-  Droplets 
+import {
+  ArrowLeft,
+  Send,
+  Route,
+  Trees,
+  ShieldCheck,
+  Droplets,
 } from 'lucide-react';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
 
@@ -29,8 +21,8 @@ export function InfrastructureCalculator() {
   const [pavingType, setPavingType] = usePersistentState('sr_calc_inf_paving_type', 'bata_6'); // 'bata_6' | 'bata_8' | 'segi_enam' | 'grass_block'
   
   // Ketebalan lapisan
-  const [tebalAbuBatu, setTebalAbuBatu] = usePersistentState('sr_calc_inf_abu_batu_t', '0.05'); // meter (5cm)
-  const [tebalSirtu, setTebalSirtu] = usePersistentState('sr_calc_inf_sirtu_t', '0.15'); // meter (15cm)
+  const [tebalAbuBatu] = usePersistentState('sr_calc_inf_abu_batu_t', '0.05'); // meter (5cm)
+  const [tebalSirtu] = usePersistentState('sr_calc_inf_sirtu_t', '0.15'); // meter (15cm)
   
   // Kanstin
   const [hitungKanstin, setHitungKanstin] = usePersistentState('sr_calc_inf_hitung_kanstin', true);
@@ -470,7 +462,7 @@ export function InfrastructureCalculator() {
               </label>
               {hitungKanstin && (
                 <p className="text-[10px] font-mono text-amber-800">
-                  Panjang: <b>{calc.panjangKanstinMeter} m'</b> (≈ <b>{calc.pcsKanstin} pcs</b> kanstin 40cm)
+                  Panjang: <b>{calc.panjangKanstinMeter} m&apos;</b> (≈ <b>{calc.pcsKanstin} pcs</b> kanstin 40cm)
                 </p>
               )}
             </div>
@@ -509,13 +501,13 @@ export function InfrastructureCalculator() {
                 </div>
               </div>
               <span className="px-2 py-0.5 rounded bg-sky-50 text-sky-800 font-mono font-bold text-[11px] border border-sky-200">
-                {parseNum(panjangSaluran)} m'
+                {parseNum(panjangSaluran)} m&apos;
               </span>
             </div>
 
             {/* Inputs Drainase */}
             <div>
-              <label className="block text-[10px] text-slate-500 uppercase font-mono mb-1">Panjang Saluran Total (m')</label>
+              <label className="block text-[10px] text-slate-500 uppercase font-mono mb-1">Panjang Saluran Total (m&apos;)</label>
               <input
                 type="number"
                 step="1"
@@ -603,7 +595,7 @@ export function InfrastructureCalculator() {
                 </div>
               </div>
               <span className="px-2 py-0.5 rounded bg-indigo-50 text-indigo-800 font-mono font-bold text-[11px] border border-indigo-200">
-                {parseNum(panjangPagar)} m'
+                {parseNum(panjangPagar)} m&apos;
               </span>
             </div>
 
@@ -783,7 +775,7 @@ export function InfrastructureCalculator() {
             />
           </div>
           <div>
-            <label className="block text-[10px] text-slate-500 uppercase mb-1">Pagar Kawasan (Rp/m')</label>
+            <label className="block text-[10px] text-slate-500 uppercase mb-1">Pagar Kawasan (Rp/m&apos;)</label>
             <input
               type="number"
               value={hargaPagar}
@@ -887,7 +879,7 @@ export function InfrastructureCalculator() {
 
           <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-800">
             <input type="checkbox" checked={sendPagarKawasan} onChange={e => setSendPagarKawasan(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-            <span>Pagar Keliling — <b className="font-mono text-emerald-900">{calc.pPagar} m'</b></span>
+            <span>Pagar Keliling — <b className="font-mono text-emerald-900">{calc.pPagar} m&apos;</b></span>
           </label>
 
           {includePosSatpam && (
@@ -900,7 +892,7 @@ export function InfrastructureCalculator() {
           {includeGerbang && (
             <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-slate-800">
               <input type="checkbox" checked={sendGerbangKawasan} onChange={e => setSendGerbangKawasan(e.target.checked)} className="w-4 h-4 text-emerald-600 rounded" />
-              <span>Gerbang Utama — <b className="font-mono text-emerald-900">{lebarGerbang} m'</b></span>
+              <span>Gerbang Utama — <b className="font-mono text-emerald-900">{lebarGerbang} m&apos;</b></span>
             </label>
           )}
         </div>

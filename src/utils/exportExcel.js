@@ -1,33 +1,17 @@
-import * as XLSX from 'xlsx';
 import { toRoman } from './formatters.js';
 import { calculateMaterialTakeoff } from './materialTakeoff.js';
+import { defaultSchedule, normalizeSchedule } from './normalize.js';
 
-const SCHEDULE_STORAGE_KEY = 'sr_boq_schedule_config_v2'; // harus sama dengan BoQContext
+// Pustaka xlsx (~400 KB) hanya dimuat saat pengguna benar-benar mengekspor.
+let xlsxModule = null;
+async function loadXlsx() {
+  if (!xlsxModule) xlsxModule = await import('xlsx');
+  return xlsxModule;
+}
 
-/**
- * Membaca konfigurasi jadwal aktif dari localStorage jika tidak disediakan langsung
- */
-function getActiveScheduleConfig(passedConfig) {
-  if (passedConfig && passedConfig.durationWeeks) {
-    return passedConfig;
-  }
-  try {
-    if (typeof localStorage !== 'undefined') {
-      const saved = localStorage.getItem(SCHEDULE_STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (parsed && parsed.durationWeeks) return parsed;
-      }
-    }
-  } catch (e) {
-    console.error("Gagal membaca jadwal dari storage:", e);
-  }
-  return {
-    durationWeeks: 12,
-    startDate: new Date().toISOString().slice(0, 10),
-    categorySchedules: {},
-    actualProgress: {}
-  };
+/** Jadwal yang dipakai sheet Kurva S: jadwal proyek bila ada, selain itu jadwal bawaan proyek tsb. */
+function resolveScheduleConfig(passedConfig, state) {
+  return normalizeSchedule(passedConfig) || defaultSchedule(state?.categories || [], state?.project?.date || undefined);
 }
 
 /**
@@ -37,7 +21,17 @@ function getActiveScheduleConfig(passedConfig) {
  * - Sheet 3: Kurva S & Jadwal (bobot mingguan, kumulatif, deviasi)
  * - Sheet 4: Kebutuhan Material (BOM) (Semen 40kg, pasir, split, besi lonjor, HOK)
  */
-export function exportBoQToExcel(state, options = {}) {
+export async function exportBoQToExcel(state, options = {}) {
+  try {
+    return await buildAndDownloadWorkbook(state, options);
+  } catch (error) {
+    console.error('[SR Studio] Ekspor Excel gagal:', error);
+    alert(`Gagal mengekspor Excel: ${error?.message || error}`);
+    return false;
+  }
+}
+
+async function buildAndDownloadWorkbook(state, options) {
   const cats = Array.isArray(state?.categories) ? state.categories : [];
   const filledCats = cats
     .map(cat => ({
@@ -67,7 +61,8 @@ export function exportBoQToExcel(state, options = {}) {
   const projectClient = state.project?.client || "-";
   const projectDate = state.project?.date || new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
 
-  const scheduleConfig = getActiveScheduleConfig(options.scheduleConfig);
+  const scheduleConfig = resolveScheduleConfig(options.scheduleConfig, state);
+  const XLSX = await loadXlsx();
   const takeoffData = calculateMaterialTakeoff(state, { cementPackWeight: 40 });
 
   /* =========================================================================
@@ -151,8 +146,8 @@ export function exportBoQToExcel(state, options = {}) {
     ]);
   }
 
-  const grandTotalFormula = detailPpnRowNum 
-    ? `F${detailSubtotalRowNum}+F${detailPpnRowNum}` 
+  const grandTotalFormula = detailPpnRowNum
+    ? `F${detailSubtotalRowNum}+F${detailPpnRowNum}`
     : `F${detailSubtotalRowNum}`;
 
   det.push([
@@ -176,7 +171,7 @@ export function exportBoQToExcel(state, options = {}) {
   wsDet["!merges"] = [
     { s: { r: 0, c: 0 }, e: { r: 0, c: 5 } }
   ];
-  applyCurrencyFormat(wsDet, [3, 4, 5]);
+  applyCurrencyFormat(XLSX, wsDet, [3, 4, 5]);
 
   /* =========================================================================
    * SHEET 1: REKAPITULASI BIAYA (LIVE FORMULA MERUJUK KE SHEET 2 & BOBOT %)
@@ -234,8 +229,8 @@ export function exportBoQToExcel(state, options = {}) {
   }
 
   const rekapTotalRow = rekap.length + 1;
-  const rekapTotalFormula = rekapPpnRow 
-    ? `D${rekapSubtotalRow}+D${rekapPpnRow}` 
+  const rekapTotalFormula = rekapPpnRow
+    ? `D${rekapSubtotalRow}+D${rekapPpnRow}`
     : `D${rekapSubtotalRow}`;
 
   rekap.push([
@@ -272,7 +267,7 @@ export function exportBoQToExcel(state, options = {}) {
     { s: { r: 0, c: 0 }, e: { r: 0, c: 3 } },
     { s: { r: 1, c: 0 }, e: { r: 1, c: 3 } }
   ];
-  applyCurrencyFormat(wsRekap, [3]);
+  applyCurrencyFormat(XLSX, wsRekap, [3]);
 
   /* =========================================================================
    * SHEET 3: JADWAL PELAKSANAAN & KURVA S (TIME SCHEDULE)
@@ -301,7 +296,7 @@ export function exportBoQToExcel(state, options = {}) {
   filledCats.forEach((cat, idx) => {
     const catCost = (Array.isArray(cat?.items) ? cat.items : []).reduce((s, it) => s + (parseFloat(it?.harga) || 0) * (parseFloat(it?.volume) || 0), 0);
     const weight = subtotal > 0 ? (catCost / subtotal) : 0;
-    const catSched = categorySchedules[cat.id] || { 
+    const catSched = categorySchedules[cat.id] || {
       startWeek: Math.max(1, Math.round(((idx) / filledCats.length) * (durationWeeks - 1)) + 1),
       endWeek: Math.min(durationWeeks, Math.max(1, Math.round(((idx + 2) / filledCats.length) * durationWeeks)))
     };
@@ -528,7 +523,7 @@ export function exportBoQToExcel(state, options = {}) {
     { s: { r: 0, c: 0 }, e: { r: 0, c: 6 } },
     { s: { r: 5, c: 0 }, e: { r: 5, c: 3 } }
   ];
-  applyCurrencyFormat(wsBOM, [5, 6]);
+  applyCurrencyFormat(XLSX, wsBOM, [5, 6]);
 
   /* =========================================================================
    * GABUNGKAN SEMUA 4 SHEET KE DALAM WORKBOOK EXCEL
@@ -547,7 +542,7 @@ export function exportBoQToExcel(state, options = {}) {
 /**
  * Memformat kolom cell tertentu agar memiliki number format rupiah tanpa desimal (#,##0)
  */
-function applyCurrencyFormat(ws, cols) {
+function applyCurrencyFormat(XLSX, ws, cols) {
   if (!ws["!ref"]) return;
   const range = XLSX.utils.decode_range(ws["!ref"]);
   for (let R = range.s.r; R <= range.e.r; R++) {

@@ -221,7 +221,7 @@ export function PendingQueuePanel() {
                   }`}
                 >
                   <option value="__new__">
-                    ✨ + Buat Item Baru: "{p.label}" [{p.satuan}] @Rp {formatNumber(p.harga)} di {getCategoryName(p.category)}
+                    ✨ + Buat Item Baru: &quot;{p.label}&quot; [{p.satuan}] @Rp {formatNumber(p.harga)} di {getCategoryName(p.category)}
                   </option>
                   {(categories || []).map(cat => (
                     <optgroup key={cat?.id} label={`Kategori: ${cat?.name || 'Kategori'}`}>

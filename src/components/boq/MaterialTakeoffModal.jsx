@@ -3,33 +3,21 @@ import { useBoQ } from '../../context/BoQContext';
 import { 
   calculateMaterialTakeoff 
 } from '../../utils/materialTakeoff';
-import { 
-  Package, 
-  X, 
-  Search, 
-  Printer, 
-  Truck, 
-  Layers, 
-  FileText, 
-  ShoppingBag, 
-  Building, 
-  MapPin, 
-  Calendar, 
-  User, 
-  CircleDollarSign, 
-  HardHat, 
-  FileSpreadsheet, 
+import {
+  Package,
+  X,
+  Search,
+  Printer,
+  ShoppingBag,
   Info,
-  CheckCircle2,
   Boxes,
-  Hammer
+  Hammer,
 } from 'lucide-react';
 import { formatRp, formatNumber } from '../../utils/formatters';
 
 export function MaterialTakeoffModal({ isOpen, onClose }) {
   const { 
     state, 
-    subtotal, 
     grandTotal, 
     materialTakeoffModalOpen, 
     setMaterialTakeoffModalOpen 
@@ -39,7 +27,7 @@ export function MaterialTakeoffModal({ isOpen, onClose }) {
   const handleClose = onClose || (() => setMaterialTakeoffModalOpen(false));
 
   const [documentMode, setDocumentMode] = useState('bom'); // 'bom' (Rekapitulasi Lengkap) | 'po' (Purchase Order)
-  const [truckCapacity, setTruckCapacity] = useState(6.5); // 6.5m3 dump truck or 1.5m3 pick-up
+  const [truckCapacity] = useState(6.5); // 6.5m3 dump truck or 1.5m3 pick-up
   const [selectedTab, setSelectedTab] = useState('all'); // 'all' | 'semen_agregat' | 'besi_baja' | 'dinding_lantai' | 'finishing_mep' | 'tenaga_kerja'
   const [searchQuery, setSearchQuery] = useState('');
 

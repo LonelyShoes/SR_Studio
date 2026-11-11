@@ -1,27 +1,23 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  LayoutDashboard, 
-  TrendingUp, 
-  PieChart as PieIcon, 
-  BarChart3, 
-  FileSpreadsheet, 
-  Printer, 
-  FolderArchive, 
-  Sparkles, 
-  ArrowUpRight, 
-  CheckCircle2, 
-  AlertCircle, 
-  Hammer, 
-  Boxes, 
-  Coins, 
-  Building2, 
-  MapPin, 
-  User, 
+import {
+  TrendingUp,
+  PieChart as PieIcon,
+  BarChart3,
+  FileSpreadsheet,
+  Printer,
+  ArrowUpRight,
+  CheckCircle2,
+  AlertCircle,
+  Hammer,
+  Coins,
+  Building2,
+  MapPin,
+  User,
   Calendar,
-  Layers
+  Layers,
 } from 'lucide-react';
-import { formatRp, formatNumber, toRoman } from '../../utils/formatters';
+import { formatRp, toRoman } from '../../utils/formatters';
 import { exportBoQToExcel } from '../../utils/exportExcel';
 
 // Palet warna arsitektural untuk slice chart & legend
@@ -39,15 +35,15 @@ const PALETTE = [
 ];
 
 export function DashboardView() {
-  const { 
-    state, 
-    setActiveTab, 
-    subtotal, 
-    ppnAmount, 
-    grandTotal, 
+  const {
+    state,
+    setActiveTab,
+    subtotal,
+    ppnAmount,
+    grandTotal,
     filledItemsCount,
     scheduleConfig,
-    setDocumentModalOpen 
+    setDocumentModalOpen
   } = useBoQ();
 
   const [hoveredCatId, setHoveredCatId] = useState(null);
@@ -111,7 +107,7 @@ export function DashboardView() {
   }, [state?.categories, subtotal]);
 
   // 3. Rasio Material vs Upah Tenaga Kerja
-  const { materialCost, labourCost, materialPercent, labourPercent } = useMemo(() => {
+  const { materialCost, materialPercent, labourPercent } = useMemo(() => {
     let mCost = 0;
     let lCost = 0;
     const cats = Array.isArray(state?.categories) ? state.categories : [];
@@ -123,11 +119,11 @@ export function DashboardView() {
         if (total > 0) {
           const code = (it?.code || '').toUpperCase();
           const desc = (it?.uraian || '').toLowerCase();
-          const isLabour = code.startsWith('L') || 
-            desc.includes('pekerja') || 
-            desc.includes('tukang') || 
-            desc.includes('mandor') || 
-            desc.includes('ongkos') || 
+          const isLabour = code.startsWith('L') ||
+            desc.includes('pekerja') ||
+            desc.includes('tukang') ||
+            desc.includes('mandor') ||
+            desc.includes('ongkos') ||
             desc.includes('upah');
 
           if (isLabour) {
@@ -209,28 +205,28 @@ export function DashboardView() {
 
       {/* ==================== TOP HERO BANNER ==================== */}
       <div className="relative rounded-3xl bg-gradient-to-br from-slate-900 via-blueprint-900 to-slate-950 p-6 sm:p-8 text-white shadow-2xl border border-white/10 overflow-hidden mb-8">
-        
+
         {/* Background Architectural Grid Pattern */}
-        <div 
-          className="absolute inset-0 opacity-10 pointer-events-none" 
-          style={{ 
+        <div
+          className="absolute inset-0 opacity-10 pointer-events-none"
+          style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, rgba(255,255,255,0.2) 1px, transparent 0)`,
-            backgroundSize: '24px 24px' 
-          }} 
+            backgroundSize: '24px 24px'
+          }}
         />
-        
+
         {/* Ambient Glows */}
         <div className="absolute top-0 right-0 w-80 h-80 bg-amber-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-20 -left-20 w-80 h-80 bg-blueprint-500/20 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          
+
           {/* Brand & Project Info */}
           <div className="space-y-3 max-w-2xl">
             <div className="flex items-center gap-3">
-              <img 
-                src="/icon.png" 
-                alt="SR Studio" 
+              <img
+                src="/icon.png"
+                alt="SR Studio"
                 className="w-10 h-10 object-contain rounded-xl bg-white/10 p-1.5 border border-white/20 shadow-inner backdrop-blur-md"
               />
               <div>
@@ -308,7 +304,7 @@ export function DashboardView() {
 
       {/* ==================== EXECUTIVE KPI CARDS ==================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        
+
         {/* KPI 1: Grand Total */}
         <div className="rounded-2xl bg-white border border-paper-300 p-5 shadow-sm hover:shadow-md transition-shadow relative overflow-hidden">
           <div className="flex items-center justify-between text-paper-500 mb-2">
@@ -391,7 +387,7 @@ export function DashboardView() {
 
       {/* ==================== CHARTS SECTION ==================== */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 mb-8">
-        
+
         {/* Left Card: Interactive Donut Chart (Divisi Pekerjaan) */}
         <div className="lg:col-span-6 rounded-3xl bg-white border border-paper-300 p-6 shadow-sm flex flex-col justify-between">
           <div>
@@ -425,7 +421,7 @@ export function DashboardView() {
               </div>
             ) : (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-6 my-4">
-                
+
                 {/* SVG Donut */}
                 <div className="relative w-56 h-56 shrink-0 flex items-center justify-center">
                   <svg viewBox="0 0 220 220" className="w-full h-full transform -rotate-90">
@@ -436,6 +432,7 @@ export function DashboardView() {
                           key={slice.id}
                           d={slice.d}
                           fill={slice.color.bg}
+                          opacity={hoveredCatId && !isHovered ? 0.5 : 1}
                           stroke="#ffffff"
                           strokeWidth="2"
                           className="transition-all duration-200 cursor-pointer hover:opacity-85 hover:scale-105 transform origin-center"
@@ -490,8 +487,8 @@ export function DashboardView() {
                         }`}
                       >
                         <div className="flex items-center gap-2 min-w-0 pr-2">
-                          <span 
-                            className="w-3 h-3 rounded-md shrink-0" 
+                          <span
+                            className="w-3 h-3 rounded-md shrink-0"
                             style={{ backgroundColor: cat.color.bg }}
                           />
                           <span className="font-medium text-paper-800 truncate" title={cat.name}>
@@ -576,8 +573,8 @@ export function DashboardView() {
 
                       {/* Progress bar */}
                       <div className="w-full h-2 rounded-full bg-paper-100 overflow-hidden">
-                        <div 
-                          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600 group-hover:from-amber-400 group-hover:to-amber-500 transition-all duration-500" 
+                        <div
+                          className="h-full rounded-full bg-gradient-to-r from-amber-500 to-amber-600 group-hover:from-amber-400 group-hover:to-amber-500 transition-all duration-500"
                           style={{ width: `${barWidth}%` }}
                         />
                       </div>
@@ -654,9 +651,9 @@ export function DashboardView() {
                     </td>
                     <td className="py-3 px-3">
                       <div className="w-full h-2 rounded-full bg-paper-100 overflow-hidden">
-                        <div 
+                        <div
                           className="h-full rounded-full transition-all duration-300"
-                          style={{ 
+                          style={{
                             width: `${Math.min(100, Math.max(0, cat.weight))}%`,
                             backgroundColor: cat.color.bg
                           }}

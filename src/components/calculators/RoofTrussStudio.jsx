@@ -1,30 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { formatNumber, parseNum, formatRp } from '../../utils/formatters';
-import { 
-  ArrowLeft, 
-  Home, 
-  Send, 
-  Layers, 
-  Check, 
-  Info, 
-  Sparkles, 
-  RotateCcw,
+import { formatNumber, parseNum } from '../../utils/formatters';
+import {
+  Send,
+  Layers,
+  Sparkles,
   Sliders,
-  DollarSign,
   Maximize2,
   Compass,
-  Printer,
-  Boxes,
-  HelpCircle,
-  Eye,
   Droplets,
-  ShieldCheck,
-  CheckSquare,
-  Square,
   Wrench,
-  SlidersHorizontal,
-  Layers3
+  Layers3,
 } from 'lucide-react';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
 
@@ -133,7 +119,6 @@ export function RoofTrussStudio() {
     queueCalculatedItems, 
     showToast, 
     clusterUnits, 
-    setActiveTab 
   } = useBoQ();
 
   // ==================== PARAMETER GEOMETRI KUDA-KUDA ====================
@@ -1010,7 +995,7 @@ export function RoofTrussStudio() {
                       onClick={() => setNokMode('manual')}
                       className={`px-2 py-0.5 rounded ${nokMode === 'manual' ? 'bg-amber-600 text-white font-bold' : 'text-amber-800'}`}
                     >
-                      Manual (m')
+                      Manual (m&apos;)
                     </button>
                   </div>
                 </div>
@@ -1031,7 +1016,7 @@ export function RoofTrussStudio() {
 
                   {nokMode === 'manual' ? (
                     <div>
-                      <label className="block text-[10px] text-amber-800 uppercase mb-1">Panjang Manual (m')</label>
+                      <label className="block text-[10px] text-amber-800 uppercase mb-1">Panjang Manual (m&apos;)</label>
                       <input 
                         type="number"
                         step="0.5"
@@ -1054,7 +1039,7 @@ export function RoofTrussStudio() {
                 <div className="p-2.5 rounded-xl bg-white border border-amber-200 text-[11px] text-amber-950 flex items-center justify-between">
                   <span>Hasil Estimasi Kebutuhan Nok:</span>
                   <span className="font-bold text-amber-800">
-                    {materialTakeoff.nokPieces} {materialTakeoff.nokUnitLabel} ({formatNumber(materialTakeoff.ridgeMeters, 1)} m')
+                    {materialTakeoff.nokPieces} {materialTakeoff.nokUnitLabel} ({formatNumber(materialTakeoff.ridgeMeters, 1)} m&apos;)
                   </span>
                 </div>
               </div>
@@ -1119,7 +1104,7 @@ export function RoofTrussStudio() {
 
                     {lisplangMode === 'manual' ? (
                       <div>
-                        <label className="block text-[10px] text-emerald-800 uppercase mb-1">Panjang Lisplang Manual (m')</label>
+                        <label className="block text-[10px] text-emerald-800 uppercase mb-1">Panjang Lisplang Manual (m&apos;)</label>
                         <input 
                           type="number"
                           step="0.5"
@@ -1158,7 +1143,7 @@ export function RoofTrussStudio() {
                   <div className="p-3 rounded-xl bg-white border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="text-emerald-900">Total Kebutuhan Lisplang:</span>
                     <span className="font-bold text-emerald-800 text-sm">
-                      {materialTakeoff.lisplangLembar} {materialTakeoff.lisplangUnitLabel} &bull; Total {formatNumber(materialTakeoff.lisplangMeters, 1)} m'
+                      {materialTakeoff.lisplangLembar} {materialTakeoff.lisplangUnitLabel} &bull; Total {formatNumber(materialTakeoff.lisplangMeters, 1)} m&apos;
                     </span>
                   </div>
                 </>
@@ -1227,13 +1212,13 @@ export function RoofTrussStudio() {
                         ) : (
                           <option value="front_only">Sisi Tritisan Bawah Sandar</option>
                         )}
-                        <option value="manual">Custom Panjang Manual (m')</option>
+                        <option value="manual">Custom Panjang Manual (m&apos;)</option>
                       </select>
                     </div>
 
                     {talangLoc === 'manual' && (
                       <div>
-                        <label className="block text-[10px] text-cyan-800 uppercase mb-1">Panjang Talang Manual (m')</label>
+                        <label className="block text-[10px] text-cyan-800 uppercase mb-1">Panjang Talang Manual (m&apos;)</label>
                         <input 
                           type="number"
                           step="0.5"
@@ -1250,7 +1235,7 @@ export function RoofTrussStudio() {
                     <div className="p-2 rounded-xl bg-cyan-50/50">
                       <span className="text-[10px] text-cyan-700 block uppercase">Batang Talang</span>
                       <span className="text-base font-bold text-cyan-950">{materialTakeoff.talangBatang} btg</span>
-                      <span className="text-[9.5px] text-cyan-600 block">Total {formatNumber(materialTakeoff.talangMeters, 1)} m'</span>
+                      <span className="text-[9.5px] text-cyan-600 block">Total {formatNumber(materialTakeoff.talangMeters, 1)} m&apos;</span>
                     </div>
 
                     <div className="p-2 rounded-xl bg-cyan-50/50">
@@ -1262,7 +1247,7 @@ export function RoofTrussStudio() {
                     <div className="p-2 rounded-xl bg-cyan-50/50">
                       <span className="text-[10px] text-cyan-700 block uppercase">Corong Drop Outlet</span>
                       <span className="text-base font-bold text-cyan-950">{materialTakeoff.talangCorong} unit</span>
-                      <span className="text-[9.5px] text-cyan-600 block">Pipa Tegak Ø3"</span>
+                      <span className="text-[9.5px] text-cyan-600 block">Pipa Tegak Ø3&quot;</span>
                     </div>
 
                     <div className="p-2 rounded-xl bg-cyan-50/50">
@@ -1884,7 +1869,7 @@ export function RoofTrussStudio() {
                     textAnchor="middle" 
                     className="pointer-events-none"
                   >
-                    NOK / BUBUNGAN ({formatNumber(materialTakeoff.ridgeMeters, 1)} m')
+                    NOK / BUBUNGAN ({formatNumber(materialTakeoff.ridgeMeters, 1)} m&apos;)
                   </text>
                 </g>
               ) : (
@@ -1977,7 +1962,7 @@ export function RoofTrussStudio() {
                         textAnchor="middle"
                         className="pointer-events-none"
                       >
-                        TALANG AIR HUJAN DEPAN ({materialTakeoff.talangTypeName}) &bull; ↓ Corong Pipa Ø3"
+                        TALANG AIR HUJAN DEPAN ({materialTakeoff.talangTypeName}) &bull; ↓ Corong Pipa Ø3&quot;
                       </text>
                     </>
                   )}
@@ -2033,7 +2018,7 @@ export function RoofTrussStudio() {
                         textAnchor="middle"
                         className="pointer-events-none"
                       >
-                        TALANG AIR HUJAN BELAKANG ({materialTakeoff.talangTypeName}) &bull; ↓ Corong Pipa Ø3"
+                        TALANG AIR HUJAN BELAKANG ({materialTakeoff.talangTypeName}) &bull; ↓ Corong Pipa Ø3&quot;
                       </text>
                     </>
                   )}
@@ -2050,7 +2035,7 @@ export function RoofTrussStudio() {
                   textAnchor="middle"
                   className="pointer-events-none"
                 >
-                  Tritisan Terbuka Tanpa Talang Air (Aktifkan di Tab "4. Talang Air Hujan")
+                  Tritisan Terbuka Tanpa Talang Air (Aktifkan di Tab &quot;4. Talang Air Hujan&quot;)
                 </text>
               )}
 
@@ -2114,7 +2099,7 @@ export function RoofTrussStudio() {
               <span className="w-3 h-1 bg-cyan-400 rounded inline-block" /> Kuda-Kuda Utama (C-75): <strong>{materialTakeoff.trussCount} unit</strong>
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="w-3 h-1 bg-amber-400 rounded inline-block" /> Nok Bubungan: <strong>{formatNumber(materialTakeoff.ridgeMeters, 1)} m'</strong>
+              <span className="w-3 h-1 bg-amber-400 rounded inline-block" /> Nok Bubungan: <strong>{formatNumber(materialTakeoff.ridgeMeters, 1)} m&apos;</strong>
             </span>
             <span className="flex items-center gap-1.5">
               <span className="w-3 h-1 bg-emerald-400 rounded inline-block" /> Lisplang: <strong>{materialTakeoff.lisplangActive ? `${formatNumber(materialTakeoff.lisplangMeters, 1)} m'` : 'Nonaktif'}</strong>
@@ -2185,7 +2170,7 @@ export function RoofTrussStudio() {
           <div className="p-3.5 rounded-2xl bg-amber-50/80 border border-amber-200 font-mono">
             <span className="text-[10px] font-bold uppercase text-amber-800 block">Nok / Bubungan</span>
             <span className="text-xl font-black text-amber-950 mt-1 block">
-              {formatNumber(materialTakeoff.ridgeMeters, 1)} <span className="text-xs font-normal">m'</span>
+              {formatNumber(materialTakeoff.ridgeMeters, 1)} <span className="text-xs font-normal">m&apos;</span>
             </span>
             <p className="text-[10px] text-amber-700 mt-1">
               {materialTakeoff.nokPieces} {materialTakeoff.nokUnitLabel}
@@ -2253,7 +2238,7 @@ export function RoofTrussStudio() {
             </div>
 
             <div>
-              <label className="block text-[9.5px] text-paper-600 uppercase mb-1">Nok / m'</label>
+              <label className="block text-[9.5px] text-paper-600 uppercase mb-1">Nok / m&apos;</label>
               <input 
                 type="number"
                 value={hargaNok}
@@ -2316,7 +2301,7 @@ export function RoofTrussStudio() {
 
             <label className="flex items-center gap-1.5 cursor-pointer text-slate-700">
               <input type="checkbox" checked={sendNok} onChange={e => setSendNok(e.target.checked)} className="rounded text-cyan-600" />
-              <span>Nok ({formatNumber(materialTakeoff.ridgeMeters, 1)} m')</span>
+              <span>Nok ({formatNumber(materialTakeoff.ridgeMeters, 1)} m&apos;)</span>
             </label>
 
             {materialTakeoff.lisplangActive && (

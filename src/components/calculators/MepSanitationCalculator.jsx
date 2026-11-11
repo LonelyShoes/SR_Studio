@@ -1,17 +1,16 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useMemo, useEffect } from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { formatNumber, parseNum } from '../../utils/formatters';
-import { 
-  ArrowLeft, 
-  Send, 
-  Plus, 
-  Trash2, 
-  Zap, 
-  Droplets, 
-  Sparkles, 
+import {
+  ArrowLeft,
+  Send,
+  Plus,
+  Trash2,
+  Zap,
+  Droplets,
+  Sparkles,
   HelpCircle,
   Building,
-  Maximize2
 } from 'lucide-react';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
@@ -25,7 +24,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
   useEffect(() => {
     if (initialMode) setActiveMode(initialMode);
-  }, [initialMode]);
+  }, [initialMode, setActiveMode]);
 
   /* =========================================================================
    * ⚡ STATE BAGIAN A: ELEKTRIKAL & MEP (TOPOLOGI TITIK & SIRKUIT)
@@ -95,12 +94,12 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
   // Air Kotor & Air Bekas
   const [distSepticTank, setDistSepticTank] = usePersistentState('sr_calc_san_dist_septic', '');
-  const [diaPipaKotor, setDiaPipaKotor] = usePersistentState('sr_calc_san_dia_kotor', '4');
+  const [diaPipaKotor] = usePersistentState('sr_calc_san_dia_kotor', '4');
   const [distGreyWater, setDistGreyWater] = usePersistentState('sr_calc_san_dist_grey', '');
-  const [diaPipaBekas, setDiaPipaBekas] = usePersistentState('sr_calc_san_dia_bekas', '2.5');
-  const [qtyFloorDrain, setQtyFloorDrain] = usePersistentState('sr_calc_san_floor_drain', '');
+  const [diaPipaBekas] = usePersistentState('sr_calc_san_dia_bekas', '2.5');
+  const [qtyFloorDrain] = usePersistentState('sr_calc_san_floor_drain', '');
   const [qtyBakKontrol, setQtyBakKontrol] = usePersistentState('sr_calc_san_bak_kontrol', '');
-  const [distPipaVent, setDistPipaVent] = usePersistentState('sr_calc_san_pipa_vent', '');
+  const [distPipaVent] = usePersistentState('sr_calc_san_pipa_vent', '');
 
   // Harga satuan bahan Sanitasi (Rp)
   const [hargaPipaAW12, setHargaPipaAW12] = usePersistentState('sr_calc_san_h_aw12', '');
@@ -632,7 +631,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
   const handleSendSanitasiToBoQ = () => {
     const totalPipaBtg = sanitasiSummary.btgPipaUtama + sanitasiSummary.btgPipaCabang12 + sanitasiSummary.btgPipaKotor + sanitasiSummary.btgPipaBekas + sanitasiSummary.btgPipaVent;
     const totalFixtures = sanitasiSummary.totalTitikAirBersih + sanitasiSummary.totalFloorDrain + sanitasiSummary.totalBakKontrol;
-    
+
     if (totalPipaBtg === 0 && totalFixtures === 0 && !enableRiser && inRoofTank === 'none') {
       showToast("Isi data titik saniter atau pipa terlebih dahulu sebelum mengirim ke BoQ.", "warning");
       return;
@@ -996,7 +995,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-4 sm:p-7 border border-slate-800 shadow-2xl">
         <div className={`absolute -top-24 -right-24 w-72 sm:w-80 h-72 sm:h-80 ${activeMode === 'mep' ? 'bg-amber-500/15' : 'bg-sky-500/15'} rounded-full blur-3xl pointer-events-none transition-all duration-500`} />
-        
+
         <div className="relative z-10 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className={`inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full ${activeMode === 'mep' ? 'bg-amber-500/10 border-amber-500/20 text-amber-400' : 'bg-sky-500/10 border-sky-500/20 text-sky-400'} text-[11px] sm:text-xs font-mono font-bold tracking-wide truncate`}>
@@ -1057,7 +1056,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
       </div>
 
       {/* REUSABLE CLUSTER MULTIPLIER TOOLBAR */}
-      <ClusterMultiplierBar 
+      <ClusterMultiplierBar
         multiplier={clusterUnits}
         onChange={updateClusterUnits}
         applyMode={clusterApplyMode}
@@ -1070,7 +1069,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
        * ========================================================================= */}
       {activeMode === 'mep' && (
         <div className="space-y-6 animate-fadeIn">
-          
+
 
 
           {/* =========================================================================
@@ -1106,7 +1105,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                 {/* Ceiling & Floor Structural Guide Lines */}
                 <line x1="30" y1="75" x2="930" y2="75" stroke="#334155" strokeWidth="2" strokeDasharray="8 4" />
                 <text x="35" y="68" fill="#64748b" fontSize="10" fontFamily="monospace" fontWeight="bold">RANGKA / GARIS PLAFOND (CEILING LEVEL)</text>
-                
+
                 <line x1="30" y1="285" x2="930" y2="285" stroke="#334155" strokeWidth="2" />
                 <text x="35" y="305" fill="#64748b" fontSize="10" fontFamily="monospace" fontWeight="bold">LANTAI UTAMA (FLOOR LEVEL)</text>
 
@@ -1116,7 +1115,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                 {/* ========================================================
                  * 1. TOP DIMENSION BADGES (ABOVE CEILING LINE)
                  * ======================================================== */}
-                
+
                 {/* ① FEEDER (Panel -> T-1) */}
                 <line x1="78" y1="36" x2="292" y2="36" stroke="#fbbf24" strokeWidth="1.5" />
                 <circle cx="78" cy="36" r="3" fill="#fbbf24" />
@@ -1149,7 +1148,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                  * ======================================================== */}
                 {/* Feeder line from Panel to T-1 */}
                 <path d="M 75 140 L 75 75 L 300 75" fill="none" stroke="#f59e0b" strokeWidth="3.5" strokeLinecap="round" />
-                
+
                 {/* Span line T-1 to T-2 */}
                 <path d="M 300 75 L 550 75" fill="none" stroke="#f59e0b" strokeWidth="3.5" />
 
@@ -1192,7 +1191,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
                 {/* Dropper Saklar Vertical Conduit */}
                 <path d="M 550 88 L 550 175" fill="none" stroke="#818cf8" strokeWidth="3" strokeDasharray="5 3" />
-                
+
                 {/* Drop Saklar Dimension Leader & Pill Badge */}
                 <line x1="565" y1="90" x2="565" y2="170" stroke="#818cf8" strokeWidth="1.5" />
                 <circle cx="565" cy="90" r="2.5" fill="#818cf8" />
@@ -2045,7 +2044,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
        * ========================================================================= */}
       {activeMode === 'sanitasi' && (
         <div className="space-y-6 animate-fadeIn">
-          
+
 
 
           {/* =========================================================================
@@ -2086,7 +2085,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                 {/* Pipa Utama Air Bersih */}
                 <path d="M 100 60 L 320 60" fill="none" stroke="#38bdf8" strokeWidth="3.5" />
                 <rect x="150" y="40" width="130" height="18" rx="4" fill="#0c4a6e" stroke="#38bdf8" strokeWidth="1" />
-                <text x="215" y="53" fill="#e0f2fe" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle">① Pipa Utama AW 3/4" / 1"</text>
+                <text x="215" y="53" fill="#e0f2fe" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle">① Pipa Utama AW 3/4&quot; / 1&quot;</text>
 
                 {/* Cabang Saniter Air Bersih */}
                 <path d="M 320 60 L 320 120" fill="none" stroke="#38bdf8" strokeWidth="2.5" />
@@ -2094,7 +2093,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                 <path d="M 520 60 L 520 120" fill="none" stroke="#38bdf8" strokeWidth="2.5" />
 
                 <rect x="360" y="45" width="120" height="18" rx="4" fill="#075985" stroke="#7dd3fc" strokeWidth="1" />
-                <text x="420" y="58" fill="#e0f2fe" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle">② Cabang AW 1/2"</text>
+                <text x="420" y="58" fill="#e0f2fe" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle">② Cabang AW 1/2&quot;</text>
 
                 {/* Fixture Kran & Shower */}
                 <circle cx="320" cy="130" r="14" fill="#0284c7" stroke="#38bdf8" strokeWidth="2" />
@@ -2109,7 +2108,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                 {/* Saluran Air Kotor (Pipa 4" dr Kloset -> Septic Tank) */}
                 <path d="M 520 165 L 520 200 L 730 200" fill="none" stroke="#f59e0b" strokeWidth="3.5" strokeDasharray="6 3" />
                 <rect x="560" y="185" width="135" height="18" rx="4" fill="#78350f" stroke="#f59e0b" strokeWidth="1" />
-                <text x="627" y="198" fill="#fef08a" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle">③ Pipa Air Kotor 4" (Slope)</text>
+                <text x="627" y="198" fill="#fef08a" fontSize="9" fontWeight="bold" fontFamily="monospace" textAnchor="middle">③ Pipa Air Kotor 4&quot; (Slope)</text>
 
                 {/* Septic Tank / Biofil Unit */}
                 <rect x="730" y="170" width="60" height="55" rx="6" fill="#451a03" stroke="#f59e0b" strokeWidth="2" />
@@ -2119,7 +2118,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                 {/* Saluran Air Bekas (Floor Drain -> Bak Kontrol) */}
                 <path d="M 320 165 L 320 220 L 460 220" fill="none" stroke="#64748b" strokeWidth="3" strokeDasharray="4 2" />
                 <rect x="345" y="210" width="95" height="18" rx="4" fill="#334155" stroke="#94a3b8" strokeWidth="1" />
-                <text x="392" y="223" fill="#f1f5f9" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="middle">④ Pipa Bekas 2"/3"</text>
+                <text x="392" y="223" fill="#f1f5f9" fontSize="8" fontWeight="bold" fontFamily="monospace" textAnchor="middle">④ Pipa Bekas 2&quot;/3&quot;</text>
 
                 {/* Bak Kontrol Unit */}
                 <rect x="460" y="205" width="35" height="30" rx="3" fill="#1e293b" stroke="#94a3b8" strokeWidth="1.5" />
@@ -2134,13 +2133,13 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                   ① Pipa Utama vs Cabang Air Bersih
                 </span>
                 <p className="text-sky-800 text-[11px] leading-relaxed">
-                  Pipa utama (3/4" atau 1") menyalurkan air dari tandon, lalu dibagi melalui cabang 1/2" ke tiap kran/shower.
+                  Pipa utama (3/4&quot; atau 1&quot;) menyalurkan air dari tandon, lalu dibagi melalui cabang 1/2&quot; ke tiap kran/shower.
                 </p>
               </div>
 
               <div className="p-3 rounded-xl bg-amber-50 border border-amber-200">
                 <span className="font-mono font-bold text-amber-900 text-[11px] block mb-1">
-                  ② Pipa Air Kotor 4" (Black Water)
+                  ② Pipa Air Kotor 4&quot; (Black Water)
                 </span>
                 <p className="text-amber-800 text-[11px] leading-relaxed">
                   Pipa buangan feses dari kloset langsung menuju septic tank dengan kemiringan (slope) standar 1-2%.
@@ -2149,7 +2148,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
               <div className="p-3 rounded-xl bg-slate-100 border border-slate-300">
                 <span className="font-mono font-bold text-slate-900 text-[11px] block mb-1">
-                  ③ Pipa Air Bekas 2"/3" & Bak Kontrol
+                  ③ Pipa Air Bekas 2&quot;/3&quot; & Bak Kontrol
                 </span>
                 <p className="text-slate-800 text-[11px] leading-relaxed">
                   Saluran air buangan sabun dari floor drain dan wastafel dialirkan menuju bak kontrol sebelum ke drainase kota.
@@ -2203,7 +2202,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
               <div>
                 <label className="block text-[10px] text-sky-900 uppercase mb-1 font-bold">
-                  Rata-rata Cabang 1/2" per Titik (m)
+                  Rata-rata Cabang 1/2&quot; per Titik (m)
                 </label>
                 <input
                   type="number"
@@ -2334,7 +2333,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                   placeholder="mis. 12"
                   className="w-full p-2 rounded-lg border border-paper-300 bg-white"
                 />
-                <span className="text-[10px] text-paper-500">Pipa PVC 4" Kloset</span>
+                <span className="text-[10px] text-paper-500">Pipa PVC 4&quot; Kloset</span>
               </div>
 
               <div>
@@ -2350,7 +2349,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                   placeholder="mis. 18"
                   className="w-full p-2 rounded-lg border border-paper-300 bg-white"
                 />
-                <span className="text-[10px] text-paper-500">Pipa PVC 2"/3" Floor Drain & Wastafel</span>
+                <span className="text-[10px] text-paper-500">Pipa PVC 2&quot;/3&quot; Floor Drain & Wastafel</span>
               </div>
 
               <div>
@@ -2387,7 +2386,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-1">
-              
+
               {/* Card 1: Pipa Riser Vertikal */}
               <div className="p-4 rounded-xl bg-sky-50/60 border border-sky-200 space-y-3">
                 <div className="flex items-center justify-between">
@@ -2427,10 +2426,10 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                       />
                     </div>
                     <div className="p-2 bg-white rounded-lg border border-sky-100 text-[10px] text-sky-900 space-y-0.5">
-                      <p>• Pipa 4" Kotor: {((parseNum(inRiserTinggi) || 3.6) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
-                      <p>• Pipa 3" Bekas: {((parseNum(inRiserTinggi) || 3.6) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
-                      <p>• Pipa 3/4" Bersih: {((parseNum(inRiserTinggi) || 3.6) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
-                      <p>• Pipa 1.5" Vent: {(((parseNum(inRiserTinggi) || 3.6) + 1.0) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
+                      <p>• Pipa 4&quot; Kotor: {((parseNum(inRiserTinggi) || 3.6) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
+                      <p>• Pipa 3&quot; Bekas: {((parseNum(inRiserTinggi) || 3.6) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
+                      <p>• Pipa 3/4&quot; Bersih: {((parseNum(inRiserTinggi) || 3.6) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
+                      <p>• Pipa 1.5&quot; Vent: {(((parseNum(inRiserTinggi) || 3.6) + 1.0) * (parseInt(inRiserShafts) || 1)).toFixed(1)} m</p>
                     </div>
                   </div>
                 )}
@@ -2522,7 +2521,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                     {sanitasiSummary.btgPipaCabang12 + sanitasiSummary.btgPipaUtama} btg
                   </span>
                   <p className="text-[11px] text-sky-800 font-mono mt-1">
-                    {sanitasiSummary.btgPipaCabang12} btg (1/2") + {sanitasiSummary.btgPipaUtama} btg ({pipaUtamaDia}")
+                    {sanitasiSummary.btgPipaCabang12} btg (1/2&quot;) + {sanitasiSummary.btgPipaUtama} btg ({pipaUtamaDia}&quot;)
                   </p>
                   <span className="inline-block text-[10px] font-sans px-2 py-0.5 rounded bg-white text-sky-800 border border-sky-200 mt-2">
                     Total {formatNumber(sanitasiSummary.totalMeterPipaCabang + sanitasiSummary.totalMeterPipaUtama, 1)} m
@@ -2531,7 +2530,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
                 <div className="p-4 rounded-xl bg-paper-100 border border-paper-300">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-paper-700 font-bold block">
-                    Pipa Air Kotor 4" (4m)
+                    Pipa Air Kotor 4&quot; (4m)
                   </span>
                   <span className="font-heading text-2xl font-bold text-paper-900 block mt-1">
                     {sanitasiSummary.btgPipaKotor} btg
@@ -2546,7 +2545,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
                 <div className="p-4 rounded-xl bg-paper-100 border border-paper-300">
                   <span className="text-[10px] font-mono uppercase tracking-wider text-paper-700 font-bold block">
-                    Pipa Air Bekas 2"/3" (4m)
+                    Pipa Air Bekas 2&quot;/3&quot; (4m)
                   </span>
                   <span className="font-heading text-2xl font-bold text-paper-900 block mt-1">
                     {sanitasiSummary.btgPipaBekas} btg
@@ -2594,7 +2593,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
 
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 text-xs font-mono">
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa AW 1/2" (Rp/btg)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa AW 1/2&quot; (Rp/btg)</label>
                 <input
                   type="number"
                   value={hargaPipaAW12}
@@ -2605,7 +2604,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa AW 3/4" (Rp/btg)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa AW 3/4&quot; (Rp/btg)</label>
                 <input
                   type="number"
                   value={hargaPipaAW34}
@@ -2616,7 +2615,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa AW 1" (Rp/btg)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa AW 1&quot; (Rp/btg)</label>
                 <input
                   type="number"
                   value={hargaPipaAW1}
@@ -2627,7 +2626,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa D 2" Bekas (Rp/btg)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa D 2&quot; Bekas (Rp/btg)</label>
                 <input
                   type="number"
                   value={hargaPipaD2}
@@ -2638,7 +2637,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa D 3" Kotor (Rp/btg)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa D 3&quot; Kotor (Rp/btg)</label>
                 <input
                   type="number"
                   value={hargaPipaD3}
@@ -2649,7 +2648,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa D 4" Kotor (Rp/btg)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Pipa D 4&quot; Kotor (Rp/btg)</label>
                 <input
                   type="number"
                   value={hargaPipaD4}
@@ -2660,7 +2659,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
               </div>
 
               <div>
-                <label className="block text-[10px] text-paper-600 uppercase mb-1">Kran Air 1/2" (Rp/bh)</label>
+                <label className="block text-[10px] text-paper-600 uppercase mb-1">Kran Air 1/2&quot; (Rp/bh)</label>
                 <input
                   type="number"
                   value={hargaKranAir}
@@ -2821,7 +2820,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                   onChange={e => setSendPipaAirKotor(e.target.checked)}
                   className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 accent-sky-600 cursor-pointer"
                 />
-                <span>Pipa Air Kotor 4" (Kloset) — <b className="font-mono text-sky-950">{formatNumber(sanitasiSummary.totalMeterPipaKotor, 0)} m</b></span>
+                <span>Pipa Air Kotor 4&quot; (Kloset) — <b className="font-mono text-sky-950">{formatNumber(sanitasiSummary.totalMeterPipaKotor, 0)} m</b></span>
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-paper-800">
@@ -2831,7 +2830,7 @@ export function MepSanitationCalculator({ initialMode = 'mep' }) {
                   onChange={e => setSendPipaAirBekas(e.target.checked)}
                   className="w-4 h-4 rounded text-sky-600 focus:ring-sky-500 accent-sky-600 cursor-pointer"
                 />
-                <span>Pipa Air Bekas 2"/3" — <b className="font-mono text-sky-950">{formatNumber(sanitasiSummary.totalMeterPipaBekas, 0)} m</b></span>
+                <span>Pipa Air Bekas 2&quot;/3&quot; — <b className="font-mono text-sky-950">{formatNumber(sanitasiSummary.totalMeterPipaBekas, 0)} m</b></span>
               </label>
 
               <label className="flex items-center gap-2.5 cursor-pointer text-xs font-semibold text-paper-800">

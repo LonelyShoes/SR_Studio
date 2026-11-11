@@ -1,16 +1,11 @@
-import React, { useMemo } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  Printer, 
-  X, 
-  TrendingUp, 
-  Calendar, 
-  Building2, 
-  Layers, 
-  Clock,
-  Sparkles
+import {
+  Printer,
+  X,
+  TrendingUp,
 } from 'lucide-react';
-import { formatRp, toRoman } from '../../utils/formatters';
+import { toRoman } from '../../utils/formatters';
 
 export function ScheduleDocumentModal() {
   const { scheduleModalOpen } = useBoQ();
@@ -19,12 +14,28 @@ export function ScheduleDocumentModal() {
   return <ScheduleDocumentModalContent />;
 }
 
+// Geometri grafik A4 landscape (konstan → di luar komponen agar stabil antar render).
+const chartW = 980;
+const chartH = 220;
+const padL = 45;
+const padR = 25;
+const padT = 20;
+const padB = 30;
+const plotW = chartW - padL - padR;
+const plotH = chartH - padT - padB;
+
+/** Posisi Y (px) untuk persentase kumulatif 0–100. */
+function getY(percentage) {
+  const clamped = Math.max(0, Math.min(100, percentage));
+  return padT + plotH - (clamped / 100) * plotH;
+}
+
 function ScheduleDocumentModalContent() {
-  const { 
-    state, 
-    subtotal, 
-    scheduleConfig, 
-    setScheduleModalOpen 
+  const {
+    state,
+    subtotal,
+    scheduleConfig,
+    setScheduleModalOpen
   } = useBoQ();
 
   const durationWeeks = scheduleConfig.durationWeeks || 12;
@@ -56,7 +67,7 @@ function ScheduleDocumentModalContent() {
         startWeek: 1,
         endWeek: durationWeeks
       };
-      
+
       const startW = Math.max(1, Math.min(durationWeeks, sched.startWeek || 1));
       const endW = Math.max(startW, Math.min(durationWeeks, sched.endWeek || durationWeeks));
       const spanWeeks = Math.max(1, endW - startW + 1);
@@ -147,25 +158,10 @@ function ScheduleDocumentModalContent() {
     window.print();
   };
 
-  // SVG Chart Geometry A4 Landscape (Compact)
-  const chartW = 980;
-  const chartH = 220;
-  const padL = 45;
-  const padR = 25;
-  const padT = 20;
-  const padB = 30;
-  const plotW = chartW - padL - padR;
-  const plotH = chartH - padT - padB;
-
-  const getX = (weekNum) => {
-    if (durationWeeks <= 1) return padL;
-    return padL + ((weekNum - 1) / (durationWeeks - 1)) * plotW;
-  };
-
-  const getY = (percentage) => {
-    const clamped = Math.max(0, Math.min(100, percentage));
-    return padT + plotH - (clamped / 100) * plotH;
-  };
+  const getX = useCallback(
+    (weekNum) => (durationWeeks <= 1 ? padL : padL + ((weekNum - 1) / (durationWeeks - 1)) * plotW),
+    [durationWeeks]
+  );
 
   const planPath = useMemo(() => {
     if (scheduleData.weeks.length === 0) return '';
@@ -179,7 +175,7 @@ function ScheduleDocumentModalContent() {
       const cx = (prevX + x) / 2;
       return `${path} C ${cx} ${prevY}, ${cx} ${y}, ${x} ${y}`;
     }, '');
-  }, [scheduleData.weeks, durationWeeks]);
+  }, [scheduleData.weeks, getX]);
 
   const actualPath = useMemo(() => {
     const actualWeeks = scheduleData.weeks.filter(w => w.actualCum !== null);
@@ -190,14 +186,14 @@ function ScheduleDocumentModalContent() {
       if (i === 0) return `M ${x} ${y}`;
       return `${path} L ${x} ${y}`;
     }, '');
-  }, [scheduleData.weeks, durationWeeks]);
+  }, [scheduleData.weeks, getX]);
 
   return (
     <div className="schedule-modal-backdrop fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-950/85 backdrop-blur-md overflow-y-auto">
-      
+
       {/* Modal Container */}
       <div className="schedule-modal-card relative w-full max-w-6xl bg-paper-100 rounded-3xl shadow-2xl border border-paper-400 my-auto flex flex-col max-h-[96vh] overflow-hidden">
-        
+
         {/* ==================== TOOLBAR (NO-PRINT) ==================== */}
         <div className="no-print p-3 sm:p-4 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 shrink-0">
           <div className="flex items-center gap-3">
@@ -206,7 +202,7 @@ function ScheduleDocumentModalContent() {
             </div>
             <div>
               <h2 className="text-xs sm:text-sm font-heading font-bold text-white flex items-center gap-2">
-                Pratinjau Time Schedule & Kurva "S" Berkop Resmi
+                Pratinjau Time Schedule & Kurva &quot;S&quot; Berkop Resmi
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 font-bold">
                   A4 Landscape
                 </span>
@@ -240,7 +236,7 @@ function ScheduleDocumentModalContent() {
 
         {/* ==================== A4 LANDSCAPE DOCUMENT CANVAS ==================== */}
         <div className="schedule-modal-body flex-1 overflow-y-auto p-3 sm:p-6 bg-paper-200 custom-scrollbar block">
-          
+
           {/* A4 Landscape Paper Sheet (297mm width) */}
           <div className="schedule-paper-sheet mx-auto w-full max-w-[297mm] bg-white shadow-2xl rounded-xl px-7 py-6 border border-paper-300 text-slate-900 font-sans leading-normal min-h-fit mb-10">
 
@@ -248,9 +244,9 @@ function ScheduleDocumentModalContent() {
             <div className="pb-2 border-b-2 border-slate-950">
               <div className="flex items-center justify-between gap-3">
                 <div className="shrink-0 flex items-center">
-                  <img 
-                    src="/LOGO-Model_1.jpg" 
-                    alt="SR Studio Logo" 
+                  <img
+                    src="/LOGO-Model_1.jpg"
+                    alt="SR Studio Logo"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = '/icon.png';
@@ -281,7 +277,7 @@ function ScheduleDocumentModalContent() {
             <div className="py-2.5 flex flex-col sm:flex-row sm:items-center justify-between text-[10px] border-b border-slate-300 gap-2">
               <div>
                 <h3 className="font-heading text-xs font-black uppercase text-slate-950 tracking-wide">
-                  JADWAL WAKTU PELAKSANAAN PEKERJAAN (TIME SCHEDULE) & KURVA "S"
+                  JADWAL WAKTU PELAKSANAAN PEKERJAAN (TIME SCHEDULE) & KURVA &quot;S&quot;
                 </h3>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-0.5 text-slate-700 mt-1">
                   <span><strong>Proyek:</strong> {state.project.name || 'Proyek Konstruksi'}</span>
@@ -384,8 +380,8 @@ function ScheduleDocumentModalContent() {
                       {scheduleData.weeks.map(w => {
                         const isActive = w.weekNum >= cat.startWeek && w.weekNum <= cat.endWeek;
                         return (
-                          <td 
-                            key={w.weekNum} 
+                          <td
+                            key={w.weekNum}
                             className={`py-0.5 px-0.5 text-center border-r border-slate-300 font-mono text-[8px] ${
                               isActive ? 'bg-slate-200 font-bold text-slate-950' : 'text-slate-300'
                             }`}
@@ -479,7 +475,7 @@ function ScheduleDocumentModalContent() {
             {/* 5. LEMBAR PENGESAHAN 3 PIHAK */}
             <div className="mt-4 pt-2 border-t border-slate-300 text-[10px] print-break-inside-avoid">
               <div className="grid grid-cols-3 gap-4 text-center">
-                
+
                 {/* Pihak 1: Pemberi Tugas */}
                 <div className="flex flex-col justify-between h-20">
                   <div>

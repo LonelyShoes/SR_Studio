@@ -1,17 +1,9 @@
 import React, { useState } from 'react';
-import { 
-  Maximize2, 
-  Layers, 
-  Box, 
-  Sliders, 
-  Info, 
-  Eye, 
-  EyeOff, 
+import {
+  Eye,
+  EyeOff,
   Compass,
-  Grid,
-  Sparkles
 } from 'lucide-react';
-import { formatNumber } from '../../utils/formatters';
 
 /**
  * StructuralCrossSectionVisualizer

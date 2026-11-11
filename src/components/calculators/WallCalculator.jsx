@@ -4,33 +4,25 @@ import { WALL_DEFAULTS } from '../../data/calculatorConstants';
 import { formatNumber, parseNum } from '../../utils/formatters';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
-import { 
-  ArrowLeft, 
-  SquareAsterisk, 
-  Send, 
-  Settings2, 
-  RotateCcw, 
-  Info, 
-  Check, 
+import {
+  ArrowLeft,
+  Send,
+  Settings2,
+  RotateCcw,
   ChevronDown,
   Layers,
   Paintbrush,
-  DollarSign,
-  Sparkles
 } from 'lucide-react';
 
-// Helper converter kg to sak 40kg
-const sak = (kg) => Math.ceil((kg || 0) / 40);
-
 export function WallCalculator() {
-  const { 
-    setActiveTab, 
-    queueCalculatedItems, 
-    showToast, 
-    clusterUnits, 
-    updateClusterUnits, 
-    clusterTypology, 
-    clusterRowUnits 
+  const {
+    setActiveTab,
+    queueCalculatedItems,
+    showToast,
+    clusterUnits,
+    updateClusterUnits,
+    clusterTypology,
+    clusterRowUnits
   } = useBoQ();
 
   const [luas, setLuas] = usePersistentState('sr_calc_wall_luas', '');
@@ -149,7 +141,6 @@ export function WallCalculator() {
       return;
     }
 
-    const pBata = parseNum(hargaBata);
     const pMortarSak = parseNum(hargaMortarSak);
     const pSemenSak = parseNum(hargaSemenSak);
     const pPasirM3 = parseNum(hargaPasirM3);
@@ -369,7 +360,7 @@ export function WallCalculator() {
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-4 sm:p-7 border border-slate-800 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-72 sm:w-80 h-72 sm:h-80 bg-orange-500/15 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-orange-500/10 border border-orange-500/20 text-orange-400 text-[11px] sm:text-xs font-mono font-bold tracking-wide truncate">
@@ -399,7 +390,7 @@ export function WallCalculator() {
       </div>
 
       {/* REUSABLE CLUSTER MULTIPLIER TOOLBAR */}
-      <ClusterMultiplierBar 
+      <ClusterMultiplierBar
         multiplier={clusterUnits}
         onChange={updateClusterUnits}
         applyMode={clusterApplyMode}
@@ -533,39 +524,39 @@ export function WallCalculator() {
             <span className="font-semibold uppercase tracking-wider">Pratinjau Pola Pasangan:</span>
             <span>{jenisBata === 'merah' ? 'Ukuran Standar 5×11×22 cm' : 'Ukuran Standar 60×20×10 cm'}</span>
           </div>
-          
+
           <div className="h-16 rounded-xl overflow-hidden border border-paper-300 bg-paper-200">
             <svg width="100%" height="100%" preserveAspectRatio="none">
-              <pattern 
-                id="brick-pattern" 
-                width={jenisBata === 'merah' ? "48" : "96"} 
-                height={jenisBata === 'merah' ? "20" : "32"} 
+              <pattern
+                id="brick-pattern"
+                width={jenisBata === 'merah' ? "48" : "96"}
+                height={jenisBata === 'merah' ? "20" : "32"}
                 patternUnits="userSpaceOnUse"
               >
                 {/* Row 1 */}
-                <rect 
-                  x="1" y="1" 
-                  width={jenisBata === 'merah' ? "46" : "94"} 
-                  height={jenisBata === 'merah' ? "8" : "14"} 
-                  rx="1" 
-                  fill={jenisBata === 'merah' ? "#B5451B" : "#64748B"} 
+                <rect
+                  x="1" y="1"
+                  width={jenisBata === 'merah' ? "46" : "94"}
+                  height={jenisBata === 'merah' ? "8" : "14"}
+                  rx="1"
+                  fill={jenisBata === 'merah' ? "#B5451B" : "#64748B"}
                 />
                 {/* Row 2 (offset) */}
-                <rect 
-                  x={jenisBata === 'merah' ? "-22" : "-46"} 
-                  y={jenisBata === 'merah' ? "11" : "17"} 
-                  width={jenisBata === 'merah' ? "46" : "94"} 
-                  height={jenisBata === 'merah' ? "8" : "14"} 
-                  rx="1" 
-                  fill={jenisBata === 'merah' ? "#9A3B18" : "#566477"} 
+                <rect
+                  x={jenisBata === 'merah' ? "-22" : "-46"}
+                  y={jenisBata === 'merah' ? "11" : "17"}
+                  width={jenisBata === 'merah' ? "46" : "94"}
+                  height={jenisBata === 'merah' ? "8" : "14"}
+                  rx="1"
+                  fill={jenisBata === 'merah' ? "#9A3B18" : "#566477"}
                 />
-                <rect 
-                  x={jenisBata === 'merah' ? "26" : "50"} 
-                  y={jenisBata === 'merah' ? "11" : "17"} 
-                  width={jenisBata === 'merah' ? "46" : "94"} 
-                  height={jenisBata === 'merah' ? "8" : "14"} 
-                  rx="1" 
-                  fill={jenisBata === 'merah' ? "#9A3B18" : "#566477"} 
+                <rect
+                  x={jenisBata === 'merah' ? "26" : "50"}
+                  y={jenisBata === 'merah' ? "11" : "17"}
+                  width={jenisBata === 'merah' ? "46" : "94"}
+                  height={jenisBata === 'merah' ? "8" : "14"}
+                  rx="1"
+                  fill={jenisBata === 'merah' ? "#9A3B18" : "#566477"}
                 />
               </pattern>
               <rect width="100%" height="100%" fill="url(#brick-pattern)" />
@@ -681,7 +672,7 @@ export function WallCalculator() {
 
         {/* Acian & Cat Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          
+
           {/* Acian */}
           <div className="p-4 rounded-xl bg-paper-50 border border-paper-200">
             <span className="text-xs font-mono font-bold uppercase text-paper-800 tracking-wider block mb-2">
@@ -794,7 +785,7 @@ export function WallCalculator() {
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 text-xs font-mono">
           <div>
             <label className="block text-[10px] font-semibold text-paper-600 uppercase mb-1">
-              {sendBataVol 
+              {sendBataVol
                 ? (jenisBata === 'merah' ? 'Bata Merah (Rp/m³)' : 'Bata Ringan (Rp/m³)')
                 : (jenisBata === 'merah' ? 'Bata Merah (Rp/Buah)' : 'Bata Ringan (Rp/Buah)')}
             </label>
@@ -970,7 +961,7 @@ export function WallCalculator() {
         </p>
 
         <div className="space-y-4 mb-5">
-          
+
           {/* Kelompok Bata */}
           <div className="bg-white p-3.5 rounded-xl border border-terracotta-200">
             <span className="text-[11px] font-mono font-bold uppercase text-terracotta-800 block mb-2">

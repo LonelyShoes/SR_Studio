@@ -1,62 +1,94 @@
 # Panduan Deploy ke Vercel — SR Studio BoQ Tools
 
-## Changelog build 2026-09-28 (kalkulator per Library + PWA)
-- FITUR: isian kalkulator kini tersimpan **per Library RAB** yang sedang dibuka (kunci `sr_calc_*@@<id proyek>`, draft = `@@__draft__`). Pindah proyek → isian kalkulator ikut berganti; kembali ke proyek → isian lama muncul lagi.
-- Draft yang disimpan ke Library → isian kalkulator ikut pindah ke proyek baru. "Simpan sebagai revisi baru" & "Duplikat" → isian disalin. Hapus proyek → isian kalkulatornya ikut dibersihkan.
-- Migrasi otomatis satu kali: isian kalkulator lama dipindahkan ke proyek yang sedang aktif, jadi tidak ada data yang hilang.
-- PWA: `manifest.webmanifest`, ikon `pwa-192.png`/`pwa-512.png`, dan `sw.js` (cache offline app shell + aset). Aplikasi bisa di-*install* dan dibuka saat offline.
-- `vercel.json`: `sw.js` dikirim dengan `Cache-Control: no-cache` agar update service worker langsung diterima.
-- Catatan: service worker hanya aktif di build produksi (HTTPS / localhost), tidak di `npm run dev`.
+Proyek Vercel: **sr-studio** · Produksi: https://sr-studio-alpha.vercel.app
 
-## Changelog build 2026-09-26 (audit bug)
-- FIX kritis: aplikasi gagal dimuat ("getInitialSchedule is not defined") karena fungsi `getInitialSchedule` & `getInitialRole` terhapus saat refactor BoQContext. Dipulihkan.
-- FIX: modal Cetak Time Schedule & Kurva S melanggar rules-of-hooks (risiko crash saat dibuka/ditutup). Dipisah menjadi wrapper + konten.
-- FIX: ekspor Excel dari Library membaca kunci jadwal yang salah (`sr_studio_schedule_config_v2` → `sr_boq_schedule_config_v2`).
-- FIX hitungan: tulangan > 12 m kini memperhitungkan sambungan lewatan 40D; sisa potongan terakhir ikut dipacking FFD.
-- FIX input: `parseNum` menerima koma desimal ("2,5").
-- `package-lock.json` disinkronkan (sebelumnya tidak memuat eslint/vitest, `npm ci` di Vercel bisa gagal).
-- Test: 14 unit test lulus; smoke test browser semua 15 tab + modal tanpa error.
+## Cara deploy
 
-File build produksi terbaru telah berhasil dikompilasi ke folder `dist/` dan diarsipkan ke file zip `sr-studio-vercel-dist.zip`.
+### Opsi 1 — CLI (paling cepat, proyek sudah tertaut)
 
----
-
-## Opsi 1: Drag & Drop (Instan Tanpa Git / Node.js)
-
-1. Buka dashboard Vercel di [vercel.com](https://vercel.com) dan login ke akun Anda.
-2. Buka menu **Add New...** -> pilih **Project**.
-3. Jika Anda menggunakan fitur Drag & Drop Vercel Preview / Upload:
-   - **Tarik & Lepas (Drag & Drop)** folder **`dist/`** atau file **`sr-studio-vercel-dist.zip`** ke area upload Vercel.
-4. Vercel akan langsung mengunggah file statis dan memberikan link website aktif (misal: `https://sr-studio-boq-tools.vercel.app`).
-
----
-
-## Opsi 2: Hubungkan ke GitHub / Git Repository (Otomatis Update)
-
-Jika Anda ingin Vercel otomatis mengompilasi ulang setiap ada perubahan di masa depan:
-
-1. Push seluruh folder project ini ke repositori **GitHub** Anda.
-2. Di Vercel Dashboard, klik **Add New...** -> **Project**.
-3. Pilih repositori GitHub Anda dan klik **Import**.
-4. Konfigurasi proyek (otomatis terdeteksi):
-   - **Framework Preset**: `Vite`
-   - **Root Directory**: `./`
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `dist`
-5. Klik **Deploy** -> Website akan aktif dalam hitungan detik.
-
----
-
-## Konfigurasi SPA Routing (`vercel.json`)
-File `vercel.json` sudah disediakan di root dan di dalam folder `dist/` untuk memastikan URL dan reload halaman selalu mengarah ke `index.html` tanpa error 404:
-
-```json
-{
-  "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.html"
-    }
-  ]
-}
+```bash
+npm run check     # lint + test + build
+vercel --prod
 ```
+
+### Opsi 2 — Git (otomatis setiap push)
+
+1. `git push origin main`
+2. Bila repositori sudah dihubungkan di dashboard Vercel, deploy berjalan otomatis.
+   Belum terhubung? *Add New → Project → Import* repositori `SR_Studio`; pengaturan build dibaca dari
+   [`vercel.json`](./vercel.json) (framework Vite, `npm run build`, output `dist`).
+
+### Opsi 3 — Drag & drop (tanpa Git / Node.js di server)
+
+```bash
+npm run build && npm run package
+```
+
+Unggah folder **`dist/`** atau **`sr-studio-vercel-dist.zip`** di dashboard Vercel. `dist/vercel.json` sudah memuat
+header keamanan & fallback SPA yang sama.
+
+## Yang diatur `vercel.json`
+
+- Build: `npm ci` → `npm run build` → `dist/`
+- Header keamanan: Content-Security-Policy (hanya origin sendiri, Google Fonts, dan Firebase Realtime Database),
+  `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`
+- Cache: `assets/*` immutable 1 tahun (nama berkas ber-hash); `sw.js` tidak pernah di-cache
+- Fallback SPA untuk path non-berkas (aset yang hilang tetap 404, tidak dialihkan ke `index.html`)
+
+---
+
+## Changelog
+
+### 3.0.0 — 2026-11-11 · Kolaborasi realtime & audit menyeluruh
+
+**Realtime cloud**
+- Semua input (BoQ, antrian kalkulator, isian kalkulator, jadwal & progres Kurva S, operasi Library) tersimpan
+  otomatis dan tampil langsung di semua perangkat. Tombol "Sinkronkan" dihapus — tidak lagi diperlukan.
+- Sinkronisasi per-field dengan merge 3 arah: dua orang yang mengedit item berbeda tidak saling menimpa;
+  ketikan yang sedang berlangsung tidak tergeser data masuk.
+- Offline-first: perubahan saat offline disimpan di perangkat (outbox) dan dikirim saat tersambung;
+  Library tetap terbuka offline dari cache IndexedDB.
+- Indikator status di bar atas + **Pusat Sinkronisasi**: siapa yang online, proyek apa yang dibuka, log aktivitas.
+- Draf otomatis: pekerjaan yang belum disimpan langsung terlihat di Library dengan lencana "Draf".
+- Jadwal/Kurva S kini **per proyek** (sebelumnya satu jadwal dipakai semua proyek dan tidak tersinkron).
+- Riwayat versi: 5 slot manual + 5 cadangan otomatis sebelum sesi edit. Sampah: proyek terhapus dapat dipulihkan 30 hari.
+
+**Data lama dipertahankan**
+- Migrasi otomatis & idempoten dari data versi 2 (cloud + Library lokal tiap perangkat). Data versi 2 tidak diubah
+  dan tetap menjadi cadangan. Diverifikasi: 6 proyek + seluruh revisi identik (total, item, volume).
+- Salinan kerja lokal yang berbeda dari cloud tidak pernah menimpa proyek bersama — dijadikan draf terpisah.
+
+**Keamanan**
+- Master Code tidak lagi tampil di halaman depan dan tidak ada di bundle (verifikasi hash PBKDF2).
+- Kode OTP: hanya hash yang disimpan di cloud, sekali pakai lewat transaksi atomik, kedaluwarsa 30 menit,
+  terkunci setelah 5 kali salah. OTP "algoritmik" yang bisa dihitung siapa pun dihapus.
+- Unggah cadangan ke layanan publik pihak ketiga (`restful-api.dev`) dan QR yang menyematkan seluruh Library
+  ke URL dihapus. Impor data lewat tautan `#sync=` (bisa menimpa Library) dihapus.
+- Header keamanan (CSP, anti-clickjacking, dsb.) + `database.rules.json`.
+
+**Perbaikan bug**
+- Luas bangunan per unit hilang setiap halaman dimuat ulang & tidak ikut tersimpan ke Library.
+- Komparasi proyek: biaya/m² selalu 0 dan tipologi dinding bersama tidak pernah terdeteksi (nama field salah).
+- Ekspor Excel dari Library memakai jadwal proyek lain.
+- Kotak OTP tidak bisa ditempel (paste); verifikasi ganda saat auto-submit.
+- Toast error tampil sebagai "Informasi"; toast baru bisa terhapus oleh timer toast lama.
+- Kelas Tailwind yang tidak pernah terdefinisi (`xs:`, `shadow-xs`, `ml-8.5`, animasi modal, dll.) kini aktif.
+- Aset lama yang hilang setelah deploy dialihkan ke `index.html` (layar error) → kini muat ulang otomatis.
+
+**Kualitas kode & performa**
+- BoQContext 1.555 baris dipecah: transisi state murni (`boqActions`), engine sinkronisasi tanpa React, driver.
+- ESLint 364 masalah → 0 (`--max-warnings 0`). Unit test 18 → 104 (termasuk simulasi multi-perangkat & offline).
+- Bundle awal 595 kB → 230 kB + React 143 kB (gzip 187 kB → 111 kB); xlsx & Firebase dimuat saat dibutuhkan.
+- Dependensi tak terpakai dibuang; peringatan keamanan dependensi produksi 5 → 1 (xlsx, hanya dipakai menulis file).
+
+**Tindakan dari Anda (sekali saja)**
+1. Terapkan `database.rules.json` di Firebase Console → Realtime Database → Rules.
+2. Ganti Master Code: `npm run hash:master -- <kode-baru>` → set `VITE_MASTER_CODE_HASH` di Vercel → Redeploy.
+
+### 2.0.0 — 2026-09-28 · Kalkulator per Library + PWA
+- Isian kalkulator tersimpan per proyek Library; migrasi otomatis isian lama.
+- PWA: manifest, ikon, dan service worker (cache offline app shell + aset).
+
+### 2026-09-26 · Audit bug
+- Pemulihan `getInitialSchedule`/`getInitialRole`, perbaikan rules-of-hooks pada modal jadwal, kunci jadwal ekspor
+  Excel, sambungan lewatan 40D pada tulangan > 12 m, `parseNum` menerima koma desimal.

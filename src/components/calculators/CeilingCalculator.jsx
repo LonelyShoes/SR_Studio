@@ -1,21 +1,14 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { formatNumber, parseNum } from '../../utils/formatters';
-import { 
-  ArrowLeft, 
-  Send, 
-  Plus, 
-  Trash2, 
-  Layers, 
-  Info, 
-  Check, 
-  Sparkles, 
-  Boxes, 
-  Grid, 
+import {
+  ArrowLeft,
+  Send,
+  Plus,
+  Trash2,
+  Boxes,
+  Grid,
   LayoutTemplate,
-  ChevronDown,
-  Settings2,
-  RotateCcw
 } from 'lucide-react';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
@@ -920,7 +913,7 @@ export function CeilingCalculator() {
 
                   {lisCustomMode === 'custom' && (
                     <div className="flex items-center gap-2 p-2 rounded-lg bg-teal-50 border border-teal-200 animate-fadeIn">
-                      <label className="text-[10.5px] text-teal-900 font-bold">Panjang Lis Custom (m'):</label>
+                      <label className="text-[10.5px] text-teal-900 font-bold">Panjang Lis Custom (m&apos;):</label>
                       <input
                         type="number"
                         step="0.1"
@@ -994,7 +987,7 @@ export function CeilingCalculator() {
                       <div>{r.nama}</div>
                       {r.batangLis > 0 && (
                         <div className="text-[10px] text-teal-700 font-mono flex items-center gap-1 mt-0.5">
-                          <span>Lis: {formatNumber(r.panjangLis || r.keliling, 1)} m' ({r.batangLis} btg)</span>
+                          <span>Lis: {formatNumber(r.panjangLis || r.keliling, 1)} m&apos; ({r.batangLis} btg)</span>
                           {r.isLisCustom && (
                             <span className="text-[9px] bg-teal-100 text-teal-800 px-1 rounded font-bold">Custom</span>
                           )}

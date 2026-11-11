@@ -1,19 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { TILE_DATA, FLOOR_BASE_MIX, DENSITIES } from '../../data/calculatorConstants';
 import { formatNumber, parseNum } from '../../utils/formatters';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
-import { 
-  ArrowLeft, 
-  Grid, 
-  Send, 
-  Box, 
-  Package, 
-  Layers, 
-  Check, 
-  Info,
-  Sparkles
+import {
+  ArrowLeft,
+  Grid,
+  Send,
+  Package,
+  Layers,
 } from 'lucide-react';
 
 export function FloorCalculator() {
@@ -703,7 +699,7 @@ export function FloorCalculator() {
                 <div className="p-3 rounded-xl bg-white border border-amber-200 flex flex-wrap items-center justify-between gap-2 shadow-xs">
                   <div>
                     <span className="text-[10px] text-slate-500 uppercase block">Total Panjang Plint:</span>
-                    <span className="font-heading text-lg font-bold text-amber-950">{formatNumber(plintMeterVal, 2)} m'</span>
+                    <span className="font-heading text-lg font-bold text-amber-950">{formatNumber(plintMeterVal, 2)} m&apos;</span>
                   </div>
                   <div className="text-right">
                     <span className="text-[10px] text-slate-500 uppercase block">Keping Keramik Diperlukan:</span>
@@ -805,7 +801,7 @@ export function FloorCalculator() {
             {nosingMeter > 0 && (
               <div className="p-3 rounded-xl bg-white border border-amber-100 text-xs flex justify-between font-mono font-bold text-amber-950 shadow-xs">
                 <span>Panjang Profil Tangga:</span>
-                <span className="text-amber-700">{formatNumber(nosingMeter, 2)} m'</span>
+                <span className="text-amber-700">{formatNumber(nosingMeter, 2)} m&apos;</span>
               </div>
             )}
           </div>
@@ -880,7 +876,7 @@ export function FloorCalculator() {
           </div>
 
           <div>
-            <label className="block text-[10px] font-semibold text-paper-600 uppercase mb-1">Plint Lantai (Rp/m')</label>
+            <label className="block text-[10px] font-semibold text-paper-600 uppercase mb-1">Plint Lantai (Rp/m&apos;)</label>
             <input
               type="number"
               min="0"
@@ -918,7 +914,7 @@ export function FloorCalculator() {
           </div>
 
           <div>
-            <label className="block text-[10px] font-semibold text-paper-600 uppercase mb-1">Step Nosing Tangga (Rp/m')</label>
+            <label className="block text-[10px] font-semibold text-paper-600 uppercase mb-1">Step Nosing Tangga (Rp/m&apos;)</label>
             <input
               type="number"
               min="0"
@@ -1048,7 +1044,7 @@ export function FloorCalculator() {
                 onChange={e => setSendPlint(e.target.checked)}
                 className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-600 cursor-pointer"
               />
-              <span>Plint Keramik — <b className="font-mono text-amber-900">{formatNumber(plintMeterVal, 2)} m'</b></span>
+              <span>Plint Keramik — <b className="font-mono text-amber-900">{formatNumber(plintMeterVal, 2)} m&apos;</b></span>
             </label>
           )}
 
@@ -1072,7 +1068,7 @@ export function FloorCalculator() {
                 onChange={e => setSendNosing(e.target.checked)}
                 className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 accent-amber-600 cursor-pointer"
               />
-              <span>Step Nosing Profil Tangga — <b className="font-mono text-amber-900">{formatNumber(nosingMeter, 2)} m'</b></span>
+              <span>Step Nosing Profil Tangga — <b className="font-mono text-amber-900">{formatNumber(nosingMeter, 2)} m&apos;</b></span>
             </label>
           )}
         </div>

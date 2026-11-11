@@ -1,16 +1,12 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { formatNumber, parseNum, calcRebarWeightPerM } from '../../utils/formatters';
-import { 
-  ArrowLeft, 
-  Building2, 
-  Send, 
-  Plus, 
-  Trash2, 
-  Layers, 
-  Info, 
-  Check,
-  ChevronDown
+import {
+  ArrowLeft,
+  Building2,
+  Send,
+  Plus,
+  Trash2,
 } from 'lucide-react';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { StructuralCrossSectionVisualizer } from '../common/StructuralCrossSectionVisualizer';
@@ -61,9 +57,9 @@ export function FoundationCalculator() {
   const [bkSendSemen, setBkSendSemen] = usePersistentState('sr_calc_fd_bk_send_semen', true);
   const [bkSendPasir, setBkSendPasir] = usePersistentState('sr_calc_fd_bk_send_pasir', true);
   const [bkSendGalian, setBkSendGalian] = usePersistentState('sr_calc_fd_bk_send_galian', false);
-  const [bkSendUrug, setBkSendUrug] = usePersistentState('sr_calc_fd_bk_send_urug', false);
-  const [bkSendAan, setBkSendAan] = usePersistentState('sr_calc_fd_bk_send_aan', false);
-  const [bkSendUrugKembali, setBkSendUrugKembali] = usePersistentState('sr_calc_fd_bk_send_urug_kembali', false);
+  const [bkSendUrug] = usePersistentState('sr_calc_fd_bk_send_urug', false);
+  const [bkSendAan] = usePersistentState('sr_calc_fd_bk_send_aan', false);
+  const [bkSendUrugKembali] = usePersistentState('sr_calc_fd_bk_send_urug_kembali', false);
 
   // Batu Kali optional prices
   const [bkHargaBatu, setBkHargaBatu] = usePersistentState('sr_calc_fd_bk_harga_batu', '');
@@ -98,25 +94,25 @@ export function FoundationCalculator() {
   const [fpLeherTebal, setFpLeherTebal] = usePersistentState('sr_calc_fd_fp_leher_tebal', '');
   const [fpLeherTinggi, setFpLeherTinggi] = usePersistentState('sr_calc_fd_fp_leher_tinggi', '');
   const [fpLeherDiaUtama, setFpLeherDiaUtama] = usePersistentState('sr_calc_fd_fp_leher_dia_utama', '12');
-  const [fpLeherJmlUtama, setFpLeherJmlUtama] = usePersistentState('sr_calc_fd_fp_leher_jml_utama', '4');
-  const [fpLeherDiaSeng, setFpLeherDiaSeng] = usePersistentState('sr_calc_fd_fp_leher_dia_seng', '8');
-  const [fpLeherJarakSeng, setFpLeherJarakSeng] = usePersistentState('sr_calc_fd_fp_leher_jarak_seng', '150');
+  const [fpLeherJmlUtama] = usePersistentState('sr_calc_fd_fp_leher_jml_utama', '4');
+  const [fpLeherDiaSeng] = usePersistentState('sr_calc_fd_fp_leher_dia_seng', '8');
+  const [fpLeherJarakSeng] = usePersistentState('sr_calc_fd_fp_leher_jarak_seng', '150');
 
-  const [fpTGalian, setFpTGalian] = usePersistentState('sr_calc_fd_fp_t_galian', false);
-  const [fpGalianDalam, setFpGalianDalam] = usePersistentState('sr_calc_fd_fp_galian_dalam', '');
-  const [fpTLK, setFpTLK] = usePersistentState('sr_calc_fd_fp_t_lk', false);
-  const [fpLKTebal, setFpLKTebal] = usePersistentState('sr_calc_fd_fp_lk_tebal', '0.05');
-  const [fpTUrug, setFpTUrug] = usePersistentState('sr_calc_fd_fp_t_urug', false);
-  const [fpUrugTebal, setFpUrugTebal] = usePersistentState('sr_calc_fd_fp_urug_tebal', '0.1');
+  const [fpTGalian] = usePersistentState('sr_calc_fd_fp_t_galian', false);
+  const [fpGalianDalam] = usePersistentState('sr_calc_fd_fp_galian_dalam', '');
+  const [fpTLK] = usePersistentState('sr_calc_fd_fp_t_lk', false);
+  const [fpLKTebal] = usePersistentState('sr_calc_fd_fp_lk_tebal', '0.05');
+  const [fpTUrug] = usePersistentState('sr_calc_fd_fp_t_urug', false);
+  const [fpUrugTebal] = usePersistentState('sr_calc_fd_fp_urug_tebal', '0.1');
 
   const [fpSendBeton, setFpSendBeton] = usePersistentState('sr_calc_fd_fp_send_beton', true);
   const [fpSendSemen, setFpSendSemen] = usePersistentState('sr_calc_fd_fp_send_semen', false);
   const [fpSendPasir, setFpSendPasir] = usePersistentState('sr_calc_fd_fp_send_pasir', false);
-  const [fpSendKerikil, setFpSendKerikil] = usePersistentState('sr_calc_fd_fp_send_kerikil', false);
+  const [fpSendKerikil] = usePersistentState('sr_calc_fd_fp_send_kerikil', false);
   const [fpSendBesi, setFpSendBesi] = usePersistentState('sr_calc_fd_fp_send_besi', true);
-  const [fpSendGalian, setFpSendGalian] = usePersistentState('sr_calc_fd_fp_send_galian', false);
-  const [fpSendLK, setFpSendLK] = usePersistentState('sr_calc_fd_fp_send_lk', false);
-  const [fpSendUrug, setFpSendUrug] = usePersistentState('sr_calc_fd_fp_send_urug', false);
+  const [fpSendGalian] = usePersistentState('sr_calc_fd_fp_send_galian', false);
+  const [fpSendLK] = usePersistentState('sr_calc_fd_fp_send_lk', false);
+  const [fpSendUrug] = usePersistentState('sr_calc_fd_fp_send_urug', false);
 
   // Footplat optional prices
   const [fpHargaBeton, setFpHargaBeton] = usePersistentState('sr_calc_fd_fp_harga_beton', '');
@@ -144,8 +140,8 @@ export function FoundationCalculator() {
 
   const [bpSendBeton, setBpSendBeton] = useState(true);
   const [bpSendSemen, setBpSendSemen] = useState(false);
-  const [bpSendPasir, setBpSendPasir] = useState(false);
-  const [bpSendKerikil, setBpSendKerikil] = useState(false);
+  const [bpSendPasir] = useState(false);
+  const [bpSendKerikil] = useState(false);
   const [bpSendBesi, setBpSendBesi] = useState(true);
   const [bpSendSpoil, setBpSendSpoil] = useState(false);
 
@@ -162,7 +158,6 @@ export function FoundationCalculator() {
   const { rowN, sharedRatio } = calcSharedRatio(clusterRowUnits);
 
   const bkBasePanjang = parseNum(bkPanjang);
-  const bkPartyWallVal = parseNum(bkPanjangBatas);
 
   const { effective: bkPanjangEffective, hemat: bkPanjangHemat } = calcBatuKaliEffectiveLength({
     bkPanjang, bkPanjangBatas, clusterTypology, effectiveMultiplier, sharedRatio,
@@ -180,9 +175,6 @@ export function FoundationCalculator() {
       showToast("Isi dimensi pondasi batu kali terlebih dahulu sebelum mengirim ke BoQ.", "warning");
       return;
     }
-    const pBatu = parseNum(bkHargaBatu);
-    const pSemen = parseNum(bkHargaSemen);
-    const pPasir = parseNum(bkHargaPasir);
 
     const clusterSuffix = effectiveMultiplier > 1
       ? (clusterTypology === 'shared'
@@ -358,7 +350,6 @@ export function FoundationCalculator() {
       return;
     }
     const pBeton = parseNum(fpHargaBeton);
-    const pBesi = parseNum(fpHargaBesi);
     const pSemen = parseNum(fpHargaSemen);
     const pPasir = parseNum(fpHargaPasir);
 

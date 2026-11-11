@@ -1,7 +1,7 @@
 /**
  * Material Take-off & Bill of Materials (BOM) Calculation Engine
  * SR Studio BoQ & RAB Tools
- * 
+ *
  * Mengekstrak dan mendekonstruksi seluruh item pekerjaan di detail RAB/BoQ menjadi:
  * 1. Daftar kebutuhan material riil (BOM & SPO / Surat Pesanan Pembelian Bahan ke Toko)
  * 2. Alokasi HOK Tenaga Kerja Standar SNI PUPR
@@ -364,7 +364,7 @@ export const SNI_DECOMPOSITIONS = [
 function buildActivePriceMap(boqState) {
   const map = new Map();
   const categories = boqState?.categories || [];
-  
+
   categories.forEach(cat => {
     (cat.items || []).forEach(it => {
       const uStr = typeof it.uraian === 'string' ? it.uraian : (it.uraian?.uraian || String(it.uraian || ''));
@@ -387,7 +387,7 @@ function buildActivePriceMap(boqState) {
 function resolveDynamicPrice(matName, unit, defaultPrice, activePriceMap) {
   const lower = matName.toLowerCase().trim();
   const uLower = (unit || '').toLowerCase().trim();
-  
+
   // 1. Cek kecocokan langsung
   if (activePriceMap.has(lower)) {
     const entry = activePriceMap.get(lower);
@@ -417,7 +417,7 @@ function resolveDynamicPrice(matName, unit, defaultPrice, activePriceMap) {
     if (lower.includes('gypsum') && (key.includes('gypsum') || key.includes('gipsum')) && !key.includes('pasang')) return price;
     if (lower.includes('hollow') && key.includes('hollow')) return price;
     if (lower.includes('besi') && key.includes('besi beton')) return price;
-    
+
     // Upah tenaga kerja
     if (lower === 'pekerja' && key === 'pekerja') return price;
     if (lower.includes('tukang batu') && key.includes('tukang batu')) return price;
@@ -492,7 +492,7 @@ export function isCompositeWorkItem(uraian, satuan) {
   }
 
   // Kata kunci pekerjaan konstruksi gabungan
-  const hasWorkWord = 
+  const hasWorkWord =
     (uLower.includes('pasang') && !uLower.includes('pasir pasang') && !uLower.includes('pasir pasangan')) ||
     uLower.includes('pekerjaan') ||
     uLower.startsWith('pek.') ||
@@ -515,9 +515,8 @@ export function isCompositeWorkItem(uraian, satuan) {
 /**
  * Mengelompokkan item belanja material langsung (non-komposit) ke dalam kategori logistik
  */
-function classifyDirectMaterialGroup(uraian, satuan) {
+function classifyDirectMaterialGroup(uraian) {
   const text = (uraian || '').toLowerCase();
-  const sat = (satuan || '').toLowerCase();
 
   // 1. Semen & Agregat
   if (
@@ -569,7 +568,7 @@ function classifyDirectItem(uraian, satuan, volume, harga) {
   const text = (uraian || '').trim();
   const textLower = text.toLowerCase();
   const satLower = (satuan || '').toLowerCase().trim();
-  const group = classifyDirectMaterialGroup(textLower, satLower);
+  const group = classifyDirectMaterialGroup(textLower);
 
   // Normalisasi catatan logistik untuk armada & spesifikasi
   let note = '';
@@ -788,7 +787,7 @@ export function calculateMaterialTakeoff(boqState, options = {}) {
 
   for (const [key, item] of aggregated.entries()) {
     const isPortland = item.name.toLowerCase().includes('semen portland') || (item.name.toLowerCase().startsWith('semen') && !item.name.toLowerCase().includes('nat') && !item.name.toLowerCase().includes('warna') && !item.name.toLowerCase().includes('mortar'));
-    
+
     if (isPortland) {
       const uLower = item.unit.toLowerCase();
       if (uLower === 'kg') {
@@ -875,7 +874,7 @@ export function calculateMaterialTakeoff(boqState, options = {}) {
   let totalRebarKg = 0;
   let totalRebarLonjor = 0;
 
-  for (const [key, item] of aggregated.entries()) {
+  for (const item of aggregated.values()) {
     if (item.group === 'besi_baja') {
       if (item.extra) {
         if (item.extra.kgEstimated) totalRebarKg += item.extra.kgEstimated;
@@ -897,7 +896,7 @@ export function calculateMaterialTakeoff(boqState, options = {}) {
   let totalSplitM3 = 0;
   let totalBatuKaliM3 = 0;
 
-  for (const [key, item] of aggregated.entries()) {
+  for (const item of aggregated.values()) {
     const nameLower = item.name.toLowerCase();
     const uLower = item.unit.toLowerCase();
     const m3Val = uLower === 'rit' ? item.quantity * truckCapM3 : (uLower === 'm³' || uLower === 'm3' ? item.quantity : 0);
@@ -913,7 +912,7 @@ export function calculateMaterialTakeoff(boqState, options = {}) {
   const materialsList = Array.from(aggregated.values()).map(item => {
     const isWholeUnit = ['buah', 'sak', 'pcs', 'dus', 'batang', 'lonjor', 'pail', 'galon', 'roll', 'bungkus', 'lembar', 'box', 'set', 'unit', 'rit'].includes(item.unit?.toLowerCase());
     const cleanQty = isWholeUnit ? (item.quantity % 1 === 0 ? item.quantity : Math.round(item.quantity * 10) / 10) : Math.round(item.quantity * 100) / 100;
-    
+
     // Perkaya catatan kemasan standar toko retail bangunan
     let enrichedNote = item.note || '';
     const nameLower = item.name.toLowerCase();

@@ -1,15 +1,14 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { createPortal } from 'react-dom';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  FileSpreadsheet, 
-  Layers, 
-  LayoutGrid, 
-  SquareAsterisk, 
+import {
+  FileSpreadsheet,
+  Layers,
+  LayoutGrid,
+  SquareAsterisk,
   Building2,
   RotateCcw,
   Download,
-  Sparkles,
   Inbox,
   Boxes,
   Briefcase,
@@ -27,26 +26,64 @@ import {
   Trees,
   MoreVertical,
   ChevronDown,
-  Smartphone,
   Check,
   X,
   Menu,
   Search,
   SlidersHorizontal,
   ChevronRight,
-  Command,
   Package,
-  Lock
+  Lock,
+  Cloud,
+  CloudOff,
+  Loader2,
 } from 'lucide-react';
-import { formatRp, formatNumber } from '../../utils/formatters';
+import { formatRp } from '../../utils/formatters';
 import { exportBoQToExcel } from '../../utils/exportExcel';
+import { describeSyncPhase, useCloud } from '../../context/cloudStore';
+
+const SYNC_TONE_STYLES = {
+  ok: 'bg-emerald-500/15 border-emerald-400/40 text-emerald-300 hover:bg-emerald-500/25',
+  busy: 'bg-sky-500/15 border-sky-400/40 text-sky-300 hover:bg-sky-500/25',
+  warn: 'bg-amber-500/15 border-amber-400/50 text-amber-300 hover:bg-amber-500/25',
+  error: 'bg-rose-500/15 border-rose-400/50 text-rose-300 hover:bg-rose-500/25',
+};
+
+/** Indikator sinkronisasi realtime + jumlah pengguna online. Klik → Pusat Sinkronisasi. */
+function SyncStatusPill({ onClick }) {
+  const phase = useCloud((snapshot) => snapshot.phase);
+  const pending = useCloud((snapshot) => snapshot.pending);
+  const presence = useCloud((snapshot) => snapshot.presence);
+  const status = describeSyncPhase(phase, pending);
+  const onlineCount = presence.filter((session) => session.role !== 'guest').length;
+  const Icon = status.tone === 'busy' ? Loader2 : status.tone === 'ok' ? Cloud : CloudOff;
+
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition-all ${SYNC_TONE_STYLES[status.tone]}`}
+      title={`${status.label} — ${status.detail}. Klik untuk membuka Pusat Sinkronisasi.`}
+      aria-label={`Status sinkronisasi: ${status.label}. ${onlineCount} pengguna online.`}
+    >
+      <Icon className={`w-3.5 h-3.5 ${status.tone === 'busy' ? 'animate-spin' : ''}`} />
+      <span className="hidden md:inline">{status.label}</span>
+      {onlineCount > 0 && (
+        <span className="flex items-center gap-1 pl-1.5 border-l border-white/20 font-mono">
+          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" aria-hidden="true" />
+          {onlineCount}
+        </span>
+      )}
+    </button>
+  );
+}
 
 export function Navbar() {
-  const { 
-    state, 
-    activeTab, 
-    setActiveTab, 
-    grandTotal, 
+  const {
+    state,
+    activeTab,
+    setActiveTab,
+    grandTotal,
     filledItemsCount,
     resetProject,
     library,
@@ -55,11 +92,11 @@ export function Navbar() {
     setMaterialTakeoffModalOpen,
     scheduleConfig,
     cloudConfig,
-    isCloudSyncing,
     setCloudModalOpen,
-    sessionRole,
     logoutToLandingPage,
-    isTabLockedForClient
+    isTabLockedForClient,
+    activeProject,
+    showToast,
   } = useBoQ();
 
   // State menu popup & drawer
@@ -88,7 +125,7 @@ export function Navbar() {
   const [desktopNavMode, setDesktopNavMode] = useState(() => {
     try {
       return localStorage.getItem('SR_DESKTOP_NAV_MODE') || 'grouped';
-    } catch (e) {
+    } catch {
       return 'grouped';
     }
   });
@@ -98,7 +135,9 @@ export function Navbar() {
     setDesktopNavMode(nextMode);
     try {
       localStorage.setItem('SR_DESKTOP_NAV_MODE', nextMode);
-    } catch (e) {}
+    } catch {
+      // Preferensi tampilan tidak wajib tersimpan.
+    }
   };
 
   // Keyboard shortcut Ctrl+K / Cmd+K untuk pencarian cepat modul
@@ -119,153 +158,157 @@ export function Navbar() {
   }, []);
 
   const navItems = [
-    { 
-      id: 'dashboard', 
-      label: 'Dashboard', 
+    {
+      id: 'dashboard',
+      label: 'Dashboard',
       desc: 'Analitik & Finansial Visual',
       group: 'main',
-      icon: LayoutDashboard, 
+      icon: LayoutDashboard,
       activeColor: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-900/40 ring-1 ring-blue-400/40',
       hoverColor: 'hover:bg-blue-950/70 hover:text-blue-200'
     },
-    { 
-      id: 'boq', 
-      label: 'BoQ / RAB', 
+    {
+      id: 'boq',
+      label: 'BoQ / RAB',
       desc: 'Master WBS & Anggaran Biaya',
       group: 'main',
-      icon: FileSpreadsheet, 
+      icon: FileSpreadsheet,
       badge: filledItemsCount > 0 ? `${filledItemsCount}` : null,
       activeColor: 'bg-blue-600 text-white shadow-md shadow-blue-900/40 ring-1 ring-blue-400/40',
       hoverColor: 'hover:bg-blue-950/70 hover:text-blue-200'
     },
-    { 
-      id: 'schedule', 
-      label: 'Kurva S', 
+    {
+      id: 'schedule',
+      label: 'Kurva S',
       desc: 'Time Schedule & Progres Proyek',
       group: 'main',
-      icon: TrendingUp, 
+      icon: TrendingUp,
       activeColor: 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40 ring-1 ring-emerald-400/40',
       hoverColor: 'hover:bg-emerald-950/70 hover:text-emerald-200'
     },
-    { 
-      id: 'library', 
-      label: 'Library RAB', 
+    {
+      id: 'library',
+      label: 'Library RAB',
       desc: 'Arsip & Riwayat Proyek',
       group: 'main',
-      icon: FolderArchive, 
+      icon: FolderArchive,
       badge: library.length > 0 ? `${library.length}` : null,
       activeColor: 'bg-amber-600 text-white shadow-md shadow-amber-900/40 ring-1 ring-amber-400/40',
       hoverColor: 'hover:bg-amber-950/70 hover:text-amber-200'
     },
-    { 
-      id: 'foundation', 
-      label: 'Pondasi', 
+    {
+      id: 'foundation',
+      label: 'Pondasi',
       desc: 'Batu Kali, Footplat & Galian',
       group: 'structure',
-      icon: Building2, 
+      icon: Building2,
       activeColor: 'bg-emerald-600 text-white shadow-md shadow-emerald-900/40 ring-1 ring-emerald-400/40',
       hoverColor: 'hover:bg-emerald-950/70 hover:text-emerald-200'
     },
-    { 
-      id: 'concrete', 
-      label: 'Cor Beton', 
+    {
+      id: 'concrete',
+      label: 'Cor Beton',
       desc: 'Sloof, Kolom, Balok & Plat',
       group: 'structure',
-      icon: Layers, 
+      icon: Layers,
       activeColor: 'bg-cyan-700 text-white shadow-md shadow-cyan-900/40 ring-1 ring-cyan-400/40',
       hoverColor: 'hover:bg-cyan-950/70 hover:text-cyan-200'
     },
-    { 
-      id: 'rebar', 
-      label: 'Tulangan Besi', 
+    {
+      id: 'rebar',
+      label: 'Tulangan Besi',
       desc: 'Besi Pokok & Sengkang Begel',
       group: 'structure',
-      icon: Boxes, 
+      icon: Boxes,
       activeColor: 'bg-indigo-600 text-white shadow-md shadow-indigo-900/40 ring-1 ring-indigo-400/40',
       hoverColor: 'hover:bg-indigo-950/70 hover:text-indigo-200'
     },
-    { 
-      id: 'roof', 
-      label: 'Rangka Atap', 
+    {
+      id: 'roof',
+      label: 'Rangka Atap',
       desc: 'Baja Ringan, Genteng & Nok',
       group: 'structure',
-      icon: Home, 
+      icon: Home,
       activeColor: 'bg-amber-600 text-white shadow-md shadow-amber-900/40 ring-1 ring-amber-400/40',
       hoverColor: 'hover:bg-amber-950/70 hover:text-amber-200'
     },
-    { 
-      id: 'wall', 
-      label: 'Dinding & Plester', 
+    {
+      id: 'wall',
+      label: 'Dinding & Plester',
       desc: 'Bata Merah/Hebel & Acian',
       group: 'architecture',
-      icon: SquareAsterisk, 
+      icon: SquareAsterisk,
       activeColor: 'bg-terracotta-600 text-white shadow-md shadow-terracotta-900/40 ring-1 ring-terracotta-400/40',
       hoverColor: 'hover:bg-terracotta-950/70 hover:text-terracotta-200'
     },
-    { 
-      id: 'floor', 
-      label: 'Lantai Keramik', 
+    {
+      id: 'floor',
+      label: 'Lantai Keramik',
       desc: 'Keramik, Plint & Waterproofing',
       group: 'architecture',
-      icon: LayoutGrid, 
+      icon: LayoutGrid,
       activeColor: 'bg-amber-700 text-white shadow-md shadow-amber-900/40 ring-1 ring-amber-400/40',
       hoverColor: 'hover:bg-amber-950/70 hover:text-amber-200'
     },
-    { 
-      id: 'plafond', 
-      label: 'Plafond & Lis', 
+    {
+      id: 'plafond',
+      label: 'Plafond & Lis',
       desc: 'Gypsum, Rangka Hollow & Lis',
       group: 'architecture',
-      icon: PanelTop, 
+      icon: PanelTop,
       activeColor: 'bg-teal-700 text-white shadow-md shadow-teal-900/40 ring-1 ring-teal-400/40',
       hoverColor: 'hover:bg-teal-950/70 hover:text-teal-200'
     },
-    { 
-      id: 'doors', 
-      label: 'Kusen & Pintu', 
+    {
+      id: 'doors',
+      label: 'Kusen & Pintu',
       desc: 'Aluminium/Kayu, Kaca & Kunci',
       group: 'architecture',
-      icon: DoorOpen, 
+      icon: DoorOpen,
       activeColor: 'bg-sky-600 text-white shadow-md shadow-sky-900/40 ring-1 ring-sky-400/40',
       hoverColor: 'hover:bg-sky-950/70 hover:text-sky-200'
     },
-    { 
-      id: 'mep', 
-      label: 'Elektrikal', 
+    {
+      id: 'mep',
+      label: 'Elektrikal',
       desc: 'Kabel, Titik Lampu & Saklar',
       group: 'mep_infra',
-      icon: Zap, 
+      icon: Zap,
       activeColor: 'bg-amber-600 text-white shadow-md shadow-amber-900/40 ring-1 ring-amber-400/40',
       hoverColor: 'hover:bg-amber-950/70 hover:text-amber-200'
     },
-    { 
-      id: 'sanitasi', 
-      label: 'Sanitasi', 
+    {
+      id: 'sanitasi',
+      label: 'Sanitasi',
       desc: 'Pipa Air Bersih/Kotor & Kloset',
       group: 'mep_infra',
-      icon: Droplets, 
+      icon: Droplets,
       activeColor: 'bg-sky-700 text-white shadow-md shadow-sky-900/40 ring-1 ring-sky-400/40',
       hoverColor: 'hover:bg-sky-950/70 hover:text-sky-200'
     },
-    { 
-      id: 'infrastructure', 
-      label: 'Infrastruktur', 
+    {
+      id: 'infrastructure',
+      label: 'Infrastruktur',
       desc: 'Paving Jalan, U-Ditch & Pagar',
       group: 'mep_infra',
-      icon: Trees, 
+      icon: Trees,
       activeColor: 'bg-emerald-700 text-white shadow-md shadow-emerald-900/40 ring-1 ring-emerald-400/40',
       hoverColor: 'hover:bg-emerald-950/70 hover:text-emerald-200'
     }
   ];
 
-  const handleExport = () => {
-    exportBoQToExcel(state, { scheduleConfig });
+  const handleExport = async () => {
     setMoreMenuOpen(false);
+    try {
+      await exportBoQToExcel(state, { scheduleConfig });
+    } catch (error) {
+      showToast(`Gagal mengekspor Excel: ${error?.message || error}`, 'error');
+    }
   };
 
   const handleReset = () => {
     setMoreMenuOpen(false);
-    if (window.confirm("Mulai proyek baru? Semua data saat ini (termasuk kategori dan item kustom) akan direset ke kondisi awal.")) {
+    if (window.confirm('Mulai proyek baru? Area kerja dikosongkan. Proyek yang sudah ada di Library tetap aman.')) {
       resetProject();
     }
   };
@@ -279,6 +322,7 @@ export function Navbar() {
 
   const pendingCount = state.pendingQueue?.length || 0;
   const projectName = state.project?.name?.trim() || 'Proyek Konstruksi Baru';
+  const projectStatusLabel = activeProject ? (activeProject.status === 'draft' ? 'Draf' : 'Live') : null;
 
   // Format ringkas angka untuk mobile (misal: Rp 1,47 M atau Rp 850 Jt)
   const formatCompactRp = (val) => {
@@ -323,26 +367,26 @@ export function Navbar() {
 
   return (
     <header className="sticky top-0 z-40 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 backdrop-blur-lg border-b border-slate-800/80 shadow-2xl text-white no-print">
-      
+
       {/* ==================== TIER 1: EXECUTIVE COMMAND & ACTION BAR ==================== */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 border-b border-slate-800/60">
         <div className="flex items-center justify-between h-14 sm:h-15 gap-2 sm:gap-4">
-          
+
           {/* Logo & Project Identity */}
-          <div 
-            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0" 
+          <div
+            className="flex items-center gap-2 sm:gap-3 cursor-pointer select-none group min-w-0"
             onClick={() => setActiveTab('dashboard')}
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-slate-900 p-1 shadow-md flex items-center justify-center ring-2 ring-amber-400/40 group-hover:ring-amber-300 transition-all shrink-0 border border-white/15">
               <img src="/icon.png" alt="SR Studio" className="w-6 h-6 object-contain" />
             </div>
-            
+
             <div className="min-w-0">
               <div className="flex items-center gap-1.5">
                 <span className="font-heading font-black text-xs sm:text-sm md:text-base tracking-wider text-white truncate">
                   SR STUDIO
                 </span>
-                <span className="text-[8.5px] sm:text-[9px] uppercase font-mono tracking-widest px-1.5 py-0.2 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shrink-0">
+                <span className="hidden xs:inline text-[8.5px] sm:text-[9px] uppercase font-mono tracking-widest px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 border border-amber-500/40 font-bold shrink-0">
                   TA 2026
                 </span>
               </div>
@@ -351,13 +395,31 @@ export function Navbar() {
                 <span className="truncate max-w-[110px] xs:max-w-[150px] sm:max-w-xs md:max-w-md font-medium text-slate-300">
                   {projectName}
                 </span>
+                {projectStatusLabel && (
+                  <span
+                    className={`hidden xs:inline shrink-0 px-1.5 rounded text-[9px] font-mono font-bold uppercase border ${
+                      projectStatusLabel === 'Draf'
+                        ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+                        : 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    }`}
+                    title={
+                      projectStatusLabel === 'Draf'
+                        ? 'Draf: tersinkron realtime, belum disimpan sebagai proyek resmi di Library'
+                        : 'Proyek Library: setiap perubahan tersinkron realtime ke semua pengguna'
+                    }
+                  >
+                    {projectStatusLabel}
+                  </span>
+                )}
               </div>
             </div>
           </div>
 
           {/* Action Bar (Clean & Balanced for Desktop & Mobile) */}
           <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-            
+
+            <SyncStatusPill onClick={() => setCloudModalOpen(true)} />
+
             {/* Grand Total Preview Pill (Click to open BoQ) */}
             <button
               type="button"
@@ -454,13 +516,13 @@ export function Navbar() {
               {/* Floating Dropdown Card */}
               {moreMenuOpen && (
                 <>
-                  <div 
+                  <div
                     className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs"
                     onClick={() => setMoreMenuOpen(false)}
                   />
 
                   <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-slate-900 border border-slate-700 shadow-2xl p-2.5 z-50 text-xs space-y-1 animate-fadeIn font-sans">
-                    
+
                     <div className="p-2.5 rounded-xl bg-slate-800/90 border border-slate-700 text-slate-300 mb-1">
                       <div className="flex items-center justify-between text-[11px] font-semibold text-white">
                         <span>Status Perangkat:</span>
@@ -471,9 +533,9 @@ export function Navbar() {
                         )}
                       </div>
                       <p className="text-[10px] text-slate-400 mt-1">
-                        {cloudConfig.isMasterDevice 
-                          ? 'Memiliki izin penuh simpan & kelola sinkronisasi cloud.' 
-                          : 'Mode peninjau / klien terhubung secara aman.'}
+                        {cloudConfig.isMasterDevice
+                          ? 'Akses penuh. Setiap input tersinkron realtime ke semua pengguna.'
+                          : 'Melihat data secara realtime. Mengubah data memerlukan Kode OTP Master.'}
                       </p>
                     </div>
 
@@ -506,17 +568,15 @@ export function Navbar() {
                       <span>Rekap Belanja Material (BOM)</span>
                     </button>
 
-                    {/* Master Cloud Settings */}
-                    {cloudConfig.isMasterDevice && (
-                      <button
-                        type="button"
-                        onClick={() => { setCloudModalOpen(true); setMoreMenuOpen(false); }}
-                        className="w-full flex items-center gap-2.5 p-2 rounded-xl text-slate-200 hover:bg-slate-800 transition-colors"
-                      >
-                        <Sparkles className="w-4 h-4 text-amber-400" />
-                        <span>Kelola Sinkronisasi Cloud (OTP)</span>
-                      </button>
-                    )}
+                    {/* Pusat Sinkronisasi (semua peran) */}
+                    <button
+                      type="button"
+                      onClick={() => { setCloudModalOpen(true); setMoreMenuOpen(false); }}
+                      className="w-full flex items-center gap-2.5 p-2 rounded-xl text-slate-200 hover:bg-slate-800 transition-colors"
+                    >
+                      <Cloud className="w-4 h-4 text-amber-400" />
+                      <span>{cloudConfig.isMasterDevice ? 'Pusat Sinkronisasi & Kode OTP' : 'Pusat Sinkronisasi & Aktivitas'}</span>
+                    </button>
 
                     {/* Ganti Peran */}
                     <button
@@ -551,7 +611,7 @@ export function Navbar() {
 
       {/* ==================== TIER 2: DESKTOP CLEAN GROUPED NAVIGATION ==================== */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-1.5">
-        
+
         {/* MOBILE VIEW NAVIGATION */}
         <div className="lg:hidden flex items-center gap-2">
           <button
@@ -597,11 +657,11 @@ export function Navbar() {
 
         {/* DESKTOP VIEW NAVIGATION (CLEAN & GROUPED OR FULL RIBBON) */}
         <div className="hidden lg:flex items-center justify-between gap-3">
-          
+
           {/* DESKTOP MODE 1: CLEAN GROUPED (Only 7 clean buttons!) */}
           {desktopNavMode === 'grouped' ? (
             <div className="flex items-center gap-2 flex-wrap">
-              
+
               {/* 4 Pinned Core Tabs */}
               {navItems.filter(i => i.group === 'main').map(item => {
                 const Icon = item.icon;
@@ -614,8 +674,8 @@ export function Navbar() {
                     onClick={() => handleSelectTab(item.id)}
                     title={`${item.label} — ${item.desc}${isLocked ? ' (Wajib OTP dari Master)' : ''}`}
                     className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold font-display transition-all ${
-                      isActive 
-                        ? item.activeColor 
+                      isActive
+                        ? item.activeColor
                         : 'text-slate-300 bg-slate-900/90 hover:bg-slate-800/90 border border-slate-800/80 hover:text-white'
                     }`}
                   >
@@ -655,7 +715,7 @@ export function Navbar() {
                       }`}
                     >
                       <GroupIcon className={`w-3.5 h-3.5 ${activeInGroup ? 'text-amber-400' : 'text-slate-400'}`} />
-                      
+
                       <span className="font-bold">
                         {activeInGroup && activeItem ? (
                           <span>{group.label}: <b className="text-amber-300">{activeItem.label}</b></span>
@@ -674,7 +734,7 @@ export function Navbar() {
                     {/* Dropdown Menu Flyout */}
                     {isOpen && (
                       <>
-                        <div 
+                        <div
                           className="fixed inset-0 z-40 bg-transparent"
                           onClick={() => setOpenDropdown(null)}
                         />
@@ -760,7 +820,7 @@ export function Navbar() {
 
           {/* Desktop Right Controls: Quick Search + View Mode Switcher */}
           <div className="flex items-center gap-2 shrink-0">
-            
+
             {/* Quick Search Shortcut (Ctrl+K) */}
             <button
               type="button"
@@ -798,7 +858,7 @@ export function Navbar() {
       {searchModalOpen && typeof document !== 'undefined' && createPortal(
         <div className="fixed inset-0 z-50 overflow-y-auto flex items-start justify-center pt-12 sm:pt-20 p-4 bg-slate-950/80 backdrop-blur-md animate-fadeIn">
           <div className="relative w-full max-w-lg bg-slate-900 rounded-3xl border border-slate-700 shadow-2xl overflow-hidden animate-scaleUp max-h-[85vh] flex flex-col my-auto sm:my-0">
-            
+
             {/* Search Input */}
             <div className="p-3.5 border-b border-slate-800 flex items-center gap-3">
               <Search className="w-4 h-4 text-amber-400 shrink-0" />
@@ -823,7 +883,7 @@ export function Navbar() {
             <div className="p-2 max-h-80 overflow-y-auto custom-scrollbar space-y-1">
               {filteredSearchItems.length === 0 ? (
                 <p className="py-6 text-center text-xs text-slate-500 italic">
-                  Tidak ada modul yang cocok dengan "{searchQuery}".
+                  Tidak ada modul yang cocok dengan &ldquo;{searchQuery}&rdquo;.
                 </p>
               ) : (
                 filteredSearchItems.map(item => {
@@ -837,8 +897,8 @@ export function Navbar() {
                       type="button"
                       onClick={() => handleSelectTab(item.id)}
                       className={`w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all ${
-                        isActive 
-                          ? 'bg-blue-600 text-white font-bold' 
+                        isActive
+                          ? 'bg-blue-600 text-white font-bold'
                           : 'hover:bg-slate-800 text-slate-200'
                       }`}
                     >
@@ -874,14 +934,14 @@ export function Navbar() {
 
       {/* ==================== MODULE CATALOG MODAL (CENTERED & FILTERABLE VIA PORTAL) ==================== */}
       {moduleDrawerOpen && typeof document !== 'undefined' && createPortal(
-        <div 
+        <div
           className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-5 bg-slate-950/80 backdrop-blur-sm animate-fadeIn"
           onClick={(e) => {
             if (e.target === e.currentTarget) setModuleDrawerOpen(false);
           }}
         >
           <div className="relative w-full max-w-2xl bg-slate-900 rounded-3xl border border-slate-700/80 shadow-2xl overflow-hidden flex flex-col max-h-[82vh] animate-scaleUp">
-            
+
             {/* Modal Header */}
             <div className="p-4 sm:p-4.5 bg-slate-950 border-b border-slate-800 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
@@ -912,8 +972,8 @@ export function Navbar() {
                 type="button"
                 onClick={() => setModuleFilter('all')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  moduleFilter === 'all' 
-                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs' 
+                  moduleFilter === 'all'
+                    ? 'bg-amber-500 text-slate-950 font-bold shadow-xs'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
@@ -923,8 +983,8 @@ export function Navbar() {
                 type="button"
                 onClick={() => setModuleFilter('main')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  moduleFilter === 'main' 
-                    ? 'bg-blue-600 text-white font-bold shadow-xs' 
+                  moduleFilter === 'main'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
@@ -934,8 +994,8 @@ export function Navbar() {
                 type="button"
                 onClick={() => setModuleFilter('structure')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  moduleFilter === 'structure' 
-                    ? 'bg-emerald-600 text-white font-bold shadow-xs' 
+                  moduleFilter === 'structure'
+                    ? 'bg-emerald-600 text-white font-bold shadow-xs'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
@@ -945,8 +1005,8 @@ export function Navbar() {
                 type="button"
                 onClick={() => setModuleFilter('architecture')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  moduleFilter === 'architecture' 
-                    ? 'bg-amber-600 text-white font-bold shadow-xs' 
+                  moduleFilter === 'architecture'
+                    ? 'bg-amber-600 text-white font-bold shadow-xs'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
@@ -956,8 +1016,8 @@ export function Navbar() {
                 type="button"
                 onClick={() => setModuleFilter('mep_infra')}
                 className={`px-2.5 py-1 rounded-lg text-xs font-semibold whitespace-nowrap transition-all ${
-                  moduleFilter === 'mep_infra' 
-                    ? 'bg-sky-600 text-white font-bold shadow-xs' 
+                  moduleFilter === 'mep_infra'
+                    ? 'bg-sky-600 text-white font-bold shadow-xs'
                     : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
                 }`}
               >
@@ -966,11 +1026,11 @@ export function Navbar() {
             </div>
 
             {/* Modal Body with Internal Scrolling */}
-            <div 
+            <div
               ref={moduleListRef}
               className="p-4 sm:p-5 overflow-y-auto custom-scrollbar space-y-4 text-xs flex-1 min-h-0 bg-slate-900"
             >
-              
+
               {/* Group 1: Modul Utama */}
               {(moduleFilter === 'all' || moduleFilter === 'main') && (
                 <div>
@@ -988,8 +1048,8 @@ export function Navbar() {
                           type="button"
                           onClick={() => handleSelectTab(item.id)}
                           className={`p-2.5 rounded-2xl border text-left flex items-start gap-2.5 transition-all ${
-                            isActive 
-                              ? 'bg-blue-600 text-white border-blue-400 shadow-md font-bold' 
+                            isActive
+                              ? 'bg-blue-600 text-white border-blue-400 shadow-md font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
                           }`}
                         >
@@ -1027,8 +1087,8 @@ export function Navbar() {
                           type="button"
                           onClick={() => handleSelectTab(item.id)}
                           className={`p-2.5 rounded-2xl border text-left flex items-start gap-2.5 transition-all ${
-                            isActive 
-                              ? 'bg-emerald-600 text-white border-emerald-400 shadow-md font-bold' 
+                            isActive
+                              ? 'bg-emerald-600 text-white border-emerald-400 shadow-md font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
                           }`}
                         >
@@ -1066,8 +1126,8 @@ export function Navbar() {
                           type="button"
                           onClick={() => handleSelectTab(item.id)}
                           className={`p-2.5 rounded-2xl border text-left flex items-start gap-2.5 transition-all ${
-                            isActive 
-                              ? 'bg-amber-600 text-white border-amber-400 shadow-md font-bold' 
+                            isActive
+                              ? 'bg-amber-600 text-white border-amber-400 shadow-md font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
                           }`}
                         >
@@ -1105,8 +1165,8 @@ export function Navbar() {
                           type="button"
                           onClick={() => handleSelectTab(item.id)}
                           className={`p-2.5 rounded-2xl border text-left flex items-start gap-2.5 transition-all ${
-                            isActive 
-                              ? 'bg-sky-600 text-white border-sky-400 shadow-md font-bold' 
+                            isActive
+                              ? 'bg-sky-600 text-white border-sky-400 shadow-md font-bold'
                               : 'bg-slate-800/80 hover:bg-slate-800 text-slate-200 border-slate-700/80 hover:border-slate-600'
                           }`}
                         >

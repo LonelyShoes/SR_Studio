@@ -2,23 +2,21 @@ import React, { useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useBoQ } from '../../context/BoQContext';
 import { calculateMaterialTakeoff } from '../../utils/materialTakeoff';
-import { 
-  Users, 
-  Sparkles, 
-  X, 
-  CheckCircle2, 
-  Coins, 
-  HardHat, 
-  Hammer, 
-  Info, 
-  ArrowRight,
+import {
+  Users,
+  Sparkles,
+  X,
+  Coins,
+  HardHat,
+  Hammer,
+  Info,
   ShieldCheck,
-  Briefcase
+  Briefcase,
 } from 'lucide-react';
 
 export default function LaborGeneratorModal({ isOpen, onClose }) {
   const { state, applyLaborTakeoff, showToast } = useBoQ();
-  const [targetCategory, setTargetCategory] = useState('upah_tenaga');
+  const [targetCategory] = useState('upah_tenaga');
   const [isApplying, setIsApplying] = useState(false);
 
   // Hitung dekomposisi upah tenaga kerja secara reaktif dari state BoQ

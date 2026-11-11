@@ -1,59 +1,64 @@
 import React, { useState } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  ShieldCheck, 
-  Smartphone, 
-  Lock, 
-  KeyRound, 
-  ArrowRight, 
-  Building2, 
-  Calculator, 
-  Layers, 
-  FileSpreadsheet, 
-  Cloud, 
-  Check, 
-  AlertCircle, 
+import {
+  ShieldCheck,
+  Smartphone,
+  Lock,
+  KeyRound,
+  ArrowRight,
+  Calculator,
+  FileSpreadsheet,
+  Cloud,
+  Check,
+  AlertCircle,
   Sparkles,
   ChevronRight,
-  HardHat,
-  Cpu,
-  BookmarkPlus
+  UserRound,
 } from 'lucide-react';
-import { FIXED_MASTER_CODE, FIXED_MASTER_EMAIL } from '../../services/cloudLibraryService';
+import { MASTER_EMAIL } from '../../services/cloud/config';
 
 export function LandingPage() {
-  const { selectSessionRole, showToast } = useBoQ();
+  const { selectSessionRole, loginAsMaster, showToast, displayName, setDisplayName } = useBoQ();
 
   const [selectedRole, setSelectedRole] = useState(null); // 'master' | 'client' | null
   const [masterPin, setMasterPin] = useState('');
   const [pinError, setPinError] = useState('');
   const [isVerifying, setIsVerifying] = useState(false);
 
+  // Nama tampilan dipakai di daftar pengguna online & log aktivitas yang dilihat semua pengguna.
+  const [nameInput, setNameInput] = useState(() => (/^(Master|Klien) [0-9A-F]{4}$/.test(displayName) ? '' : displayName));
+  const commitName = () => setDisplayName(nameInput);
+
   const handleSelectClient = () => {
+    commitName();
     selectSessionRole('client');
-    showToast('Selamat datang! Anda masuk dalam Mode Klien & Tim Lapangan (Read-Only).', 'info');
+    showToast('Selamat datang! Data tampil realtime. Mengubah data memerlukan Kode OTP dari Master.', 'info');
   };
 
-  const handleVerifyMaster = (e) => {
+  const handleVerifyMaster = async (e) => {
     if (e) e.preventDefault();
     setPinError('');
 
-    if (!masterPin || !masterPin.trim()) {
+    if (!masterPin.trim()) {
       setPinError('Masukkan Master Code untuk otorisasi.');
       return;
     }
 
     setIsVerifying(true);
-    setTimeout(() => {
-      if (masterPin.trim() === FIXED_MASTER_CODE) {
-        selectSessionRole('master');
-        showToast('Otorisasi Berhasil! Selamat datang Master Admin.', 'success');
+    try {
+      commitName();
+      const valid = await loginAsMaster(masterPin);
+      if (valid) {
+        showToast('Otorisasi berhasil! Selamat datang, Master.', 'success');
       } else {
         setPinError('Master Code salah. Akses ditolak.');
-        showToast('Master Code salah!', 'error');
+        setMasterPin('');
       }
+    } catch (error) {
+      setPinError('Verifikasi gagal: ' + (error?.message || error));
+    } finally {
       setIsVerifying(false);
-    }, 300);
+    }
   };
 
   return (
@@ -91,8 +96,27 @@ export function LandingPage() {
           </h1>
 
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl mx-auto font-sans leading-relaxed">
-            Platform kalkulasi volume konstruksi, perumusan Rencana Anggaran Biaya (RAB), dan sinkronisasi Cloud Database 24/7.
+            Platform kalkulasi volume konstruksi, perumusan Rencana Anggaran Biaya (RAB), dan kolaborasi realtime: setiap input langsung tersimpan di cloud dan terbaca semua pengguna.
           </p>
+        </div>
+
+        {/* Nama tampilan */}
+        <div className="max-w-md mx-auto w-full mb-6">
+          <label htmlFor="display-name" className="flex items-center gap-1.5 text-[11px] font-mono uppercase tracking-wider text-slate-400 mb-1.5">
+            <UserRound className="w-3.5 h-3.5" />
+            Nama Anda (terlihat oleh pengguna lain)
+          </label>
+          <input
+            id="display-name"
+            type="text"
+            maxLength={40}
+            autoComplete="name"
+            value={nameInput}
+            onChange={(e) => setNameInput(e.target.value)}
+            onBlur={commitName}
+            placeholder="mis. Rafi — Arsitek / Budi — Pelaksana Lapangan"
+            className="w-full py-2.5 px-4 text-xs rounded-xl border border-slate-700 bg-slate-950/70 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400"
+          />
         </div>
 
         {/* Role Selection Grid */}
@@ -119,10 +143,10 @@ export function LandingPage() {
                   👑 Master Studio
                 </h2>
                 <p className="text-xs text-amber-200/80 font-mono mt-0.5">
-                  PC Utama / Arsitek / Administrator (Kode: 20022019)
+                  PC Utama / Arsitek / Administrator
                 </p>
                 <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                  Otoritas mutlak untuk mengelola database harga, menyunting seluruh library proyek, membuat kode OTP untuk klien, dan kontrol penuh seluruh fitur.
+                  Otoritas penuh untuk mengelola harga, menyunting seluruh Library proyek, membuat Kode OTP untuk klien, dan memulihkan data.
                 </p>
               </div>
 
@@ -142,7 +166,7 @@ export function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Kontrol penuh Database Cloud Firebase 24/7</span>
+                  <span>Hapus / pulihkan proyek & riwayat versi di cloud</span>
                 </div>
               </div>
             </div>
@@ -169,6 +193,8 @@ export function LandingPage() {
                       type="password"
                       autoFocus
                       required
+                      autoComplete="current-password"
+                      aria-label="Master Code"
                       value={masterPin}
                       onChange={e => {
                         setMasterPin(e.target.value);
@@ -234,7 +260,7 @@ export function LandingPage() {
                   Mobile / Tablet / Tamu
                 </p>
                 <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-                  Akses bebas Dashboard, Kurva S, dan Library. Fitur BoQ & Kalkulator Teknis wajib menggunakan Kode OTP dari Master.
+                  Melihat Dashboard, Kurva S, dan Library secara realtime. Mengubah data (BoQ, kalkulator, jadwal) wajib Kode OTP dari Master.
                 </p>
               </div>
 
@@ -242,7 +268,7 @@ export function LandingPage() {
               <div className="space-y-2 pt-2 border-t border-slate-800 text-xs text-slate-300">
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
-                  <span>Akses bebas Dashboard, Kurva S (Jadwal), & Library RAB</span>
+                  <span>Lihat Dashboard, Kurva S & Library RAB — terbarui langsung</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4 text-amber-400 shrink-0" />
@@ -250,7 +276,7 @@ export function LandingPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Lock className="w-4 h-4 text-amber-400 shrink-0" />
-                  <span>Simpan & Duplikat Proyek ke Cloud (Wajib OTP)</span>
+                  <span>Simpan, duplikat & ubah jadwal proyek (Wajib OTP)</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Check className="w-4 h-4 text-emerald-400 shrink-0" />
@@ -278,18 +304,18 @@ export function LandingPage() {
         <div className="mt-10 sm:mt-14 pt-6 border-t border-slate-800/80 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
             <Calculator className="w-5 h-5 text-amber-400 mx-auto mb-1.5" />
-            <p className="text-[11px] font-bold text-slate-200">7+ Kalkulator</p>
+            <p className="text-[11px] font-bold text-slate-200">11 Kalkulator</p>
             <p className="text-[10px] text-slate-400">Beton, Besi, MEP, Dinding</p>
           </div>
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
             <Cloud className="w-5 h-5 text-blue-400 mx-auto mb-1.5" />
-            <p className="text-[11px] font-bold text-slate-200">Firebase Cloud</p>
-            <p className="text-[10px] text-slate-400">Sinkronisasi 24/7 Multi-Device</p>
+            <p className="text-[11px] font-bold text-slate-200">Cloud Realtime</p>
+            <p className="text-[10px] text-slate-400">Input langsung terlihat semua perangkat</p>
           </div>
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
             <Lock className="w-5 h-5 text-emerald-400 mx-auto mb-1.5" />
             <p className="text-[11px] font-bold text-slate-200">Single-Use OTP</p>
-            <p className="text-[10px] text-slate-400">Anti Benturan Data</p>
+            <p className="text-[10px] text-slate-400">Izin edit dikendalikan Master</p>
           </div>
           <div className="p-3 rounded-2xl bg-white/5 border border-white/5">
             <FileSpreadsheet className="w-5 h-5 text-green-400 mx-auto mb-1.5" />
@@ -302,7 +328,7 @@ export function LandingPage() {
 
       {/* Footer Info */}
       <footer className="py-4 text-center text-xs text-slate-500 border-t border-slate-900 bg-slate-950/60 font-mono">
-        SR Studio BoQ Suite © 2026 • Master Account: {FIXED_MASTER_EMAIL}
+        SR Studio BoQ Suite © 2026 • Kontak Master: {MASTER_EMAIL}
       </footer>
 
     </div>

@@ -1,20 +1,11 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  Printer, 
-  X, 
-  CheckCircle2, 
-  Building2, 
-  Calendar, 
-  Layers, 
-  Download, 
-  Sparkles,
-  Filter,
+import {
+  Printer,
+  X,
+  Layers,
   FileText,
   TrendingUp,
-  Clock,
-  CheckSquare,
-  Square
 } from 'lucide-react';
 import { formatRp, formatNumber, toRoman, terbilang } from '../../utils/formatters';
 
@@ -458,7 +449,7 @@ export function OfficialDocumentModal() {
                     Terbilang :
                   </span>
                   <span className="font-bold italic text-slate-950">
-                    "{terbilang(grandTotal)}"
+                    &quot;{terbilang(grandTotal)}&quot;
                   </span>
                 </div>
 
@@ -735,7 +726,7 @@ export function OfficialDocumentModal() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-300 font-mono">
-                      {scheduleCategoriesWithWeight.map((cat, idx) => (
+                      {scheduleCategoriesWithWeight.map((cat) => (
                         <tr key={cat.id} className="hover:bg-slate-50">
                           <td className="py-1 px-1 text-center font-bold border-r border-slate-300">
                             {cat.romanNo}

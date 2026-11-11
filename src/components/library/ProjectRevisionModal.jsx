@@ -1,48 +1,72 @@
-import React, { useState } from 'react';
-import { useBoQ } from '../../context/BoQContext';
-import { 
-  History, 
-  X, 
-  Camera, 
-  RotateCcw, 
-  Download, 
-  Trash2, 
-  ArrowRight, 
-  CheckCircle2, 
-  Clock, 
-  Layers, 
-  TrendingUp, 
-  TrendingDown, 
-  Minus, 
-  AlertCircle, 
-  FileText, 
-  FolderOpen,
+import React, { useEffect, useState } from 'react';
+import {
+  History,
+  X,
+  Camera,
+  RotateCcw,
+  Download,
+  Trash2,
+  CheckCircle2,
+  Clock,
+  TrendingUp,
+  TrendingDown,
+  Minus,
   ChevronDown,
   ChevronUp,
   Scale,
-  ShieldCheck
+  ShieldCheck,
+  Loader2,
+  AlertCircle,
 } from 'lucide-react';
-import { formatRp, formatNumber } from '../../utils/formatters';
+import { useBoQ } from '../../context/BoQContext';
+import { LIMITS } from '../../services/cloud/config';
+import { formatRp } from '../../utils/formatters';
+
+const formatDateTime = (value) =>
+  new Date(value).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 
 export function ProjectRevisionModal({ project, isOpen, onClose }) {
-  const { 
-    library, 
-    restoreProjectRevision, 
-    createProjectSnapshot, 
+  const {
+    library,
+    restoreProjectRevision,
+    createProjectSnapshot,
     deleteProjectRevision,
-    loadFromLibrary,
-    setActiveTab
+    loadProjectRevisions,
+    setActiveTab,
   } = useBoQ();
 
   const [newSnapshotNote, setNewSnapshotNote] = useState('');
   const [isTakingSnapshot, setIsTakingSnapshot] = useState(false);
   const [comparedRevId, setComparedRevId] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [loadError, setLoadError] = useState('');
+  const projectId = project?.id;
+
+  // Isi snapshot revisi berukuran besar → dimuat dari cloud hanya saat modal dibuka.
+  useEffect(() => {
+    if (!isOpen || !projectId) return undefined;
+    let cancelled = false;
+    setIsLoading(true);
+    setLoadError('');
+    loadProjectRevisions(projectId)
+      .catch((error) => {
+        if (!cancelled) setLoadError(error?.message || String(error));
+      })
+      .finally(() => {
+        if (!cancelled) setIsLoading(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, projectId, loadProjectRevisions]);
 
   if (!isOpen || !project) return null;
 
-  // Temukan objek proyek terbaru dari state library
-  const currentProject = library.find(p => p.id === project.id) || project;
+  // Objek proyek terbaru dari Library (ikut berubah realtime)
+  const currentProject = library.find((p) => p.id === project.id) || project;
   const revisions = Array.isArray(currentProject.revisions) ? currentProject.revisions : [];
+  const manualCount = revisions.filter((rev) => !rev.auto).length;
+  const autoCount = revisions.length - manualCount;
 
   const handleTakeSnapshot = (e) => {
     e.preventDefault();
@@ -52,15 +76,9 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
   };
 
   const handleRollback = (rev) => {
-    const revDate = new Date(rev.timestamp).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+    const revDate = formatDateTime(rev.timestamp);
 
-    if (window.confirm(`Yakin ingin memulihkan (rollback) proyek "${currentProject.name}" ke snapshot tanggal ${revDate}?\n\nVersi aktif saat ini akan otomatis dicadangkan sebagai snapshot pengaman.`)) {
+    if (window.confirm(`Yakin ingin memulihkan (rollback) proyek "${currentProject.name}" ke snapshot tanggal ${revDate}?\n\nPerubahan ini langsung berlaku untuk semua pengguna. Versi aktif saat ini otomatis dicadangkan sebagai snapshot pengaman.`)) {
       restoreProjectRevision(currentProject.id, rev.id);
       onClose();
       setActiveTab('boq');
@@ -68,15 +86,16 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
   };
 
   const handleDownloadSnapshotJSON = (rev) => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(rev.stateSnapshot, null, 2));
-    const downloadAnchor = document.createElement('a');
-    const safeTitle = (currentProject.name || "Proyek").trim().replace(/[^a-zA-Z0-9_-]+/g, "_");
-    const dateStr = new Date(rev.timestamp).toISOString().slice(0, 10);
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `${safeTitle}_Snapshot_${dateStr}_${rev.id.slice(-4)}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    if (!rev.stateSnapshot) return;
+    const url = URL.createObjectURL(new Blob([JSON.stringify(rev.stateSnapshot, null, 2)], { type: 'application/json' }));
+    const anchor = document.createElement('a');
+    const safeTitle = (currentProject.name || 'Proyek').trim().replace(/[^a-zA-Z0-9_-]+/g, '_');
+    anchor.href = url;
+    anchor.download = `${safeTitle}_Snapshot_${new Date(rev.timestamp).toISOString().slice(0, 10)}_${rev.id.slice(-4)}.json`;
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
   };
 
   const handleDelete = (revId) => {
@@ -88,9 +107,11 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div 
+      <div
         className="bg-white rounded-3xl shadow-2xl border border-slate-300 max-w-3xl w-full max-h-[90vh] flex flex-col overflow-hidden text-slate-900 animate-scaleUp"
         role="dialog"
+        aria-modal="true"
+        aria-label="Riwayat versi proyek"
       >
         {/* Modal Header */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 p-4 sm:p-5 text-white flex items-center justify-between shrink-0 shadow-md">
@@ -104,7 +125,7 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                   Riwayat Versi & Snapshot Cadangan
                 </h3>
                 <span className="text-[10px] font-mono font-bold bg-indigo-500/30 text-indigo-200 border border-indigo-400/30 px-2 py-0.5 rounded-md">
-                  Maks 5 Versi
+                  {LIMITS.manualRevisions} manual + {LIMITS.autoRevisions} otomatis
                 </span>
               </div>
               <p className="text-xs text-slate-300 truncate max-w-md">
@@ -113,8 +134,10 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
             </div>
           </div>
 
-          <button 
+          <button
+            type="button"
             onClick={onClose}
+            aria-label="Tutup"
             className="text-slate-400 hover:text-white p-1.5 rounded-xl hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -125,7 +148,7 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
         <div className="p-3 sm:px-5 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0 text-xs">
           <div className="flex items-center gap-2 text-slate-600 font-medium">
             <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-            <span>Setiap pembaruan proyek di Library otomatis mencadangkan versi sebelumnya ke riwayat ini.</span>
+            <span>Perubahan tersimpan otomatis & realtime. Cadangan otomatis dibuat sebelum sesi edit; simpan versi manual kapan saja.</span>
           </div>
 
           {!isTakingSnapshot ? (
@@ -166,7 +189,7 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
 
         {/* Timeline List Body */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
-          
+
           {/* 1. VERSI AKTIF SAAT INI */}
           <div className="rounded-2xl border-2 border-indigo-500/40 bg-indigo-50/40 p-4 relative overflow-hidden shadow-xs">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -178,13 +201,8 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                   </span>
                   <span className="text-[11px] font-mono text-slate-500 flex items-center gap-1">
                     <Clock className="w-3 h-3 text-slate-400" />
-                    Terakhir disimpan: {new Date(currentProject.updatedAt || currentProject.createdAt).toLocaleDateString('id-ID', {
-                      day: 'numeric',
-                      month: 'short',
-                      year: 'numeric',
-                      hour: '2-digit',
-                      minute: '2-digit'
-                    })}
+                    Terakhir diperbarui: {formatDateTime(currentProject.updatedAt || currentProject.createdAt)}
+                    {currentProject.updatedBy?.name ? ` oleh ${currentProject.updatedBy.name}` : ''}
                   </span>
                 </div>
                 <h4 className="font-heading font-bold text-sm text-slate-900">
@@ -211,16 +229,28 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                 Snapshot Riwayat Cadangan ({revisions.length} Tersimpan)
               </span>
               <span className="text-[11px]">
-                {revisions.length >= 5 ? 'Kapasitas 5 snapshot penuh (otomatis rotasi terlama)' : `${5 - revisions.length} slot tersisa`}
+                {manualCount}/{LIMITS.manualRevisions} manual • {autoCount}/{LIMITS.autoRevisions} otomatis (yang terlama dirotasi)
               </span>
             </div>
 
-            {revisions.length === 0 ? (
+            {loadError && (
+              <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2" role="alert">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                <span>Riwayat terbaru belum dapat dimuat ({loadError}). Menampilkan data yang tersimpan di perangkat.</span>
+              </div>
+            )}
+
+            {isLoading && revisions.length === 0 ? (
+              <div className="p-8 text-center text-slate-500 flex items-center justify-center gap-2 text-sm" role="status">
+                <Loader2 className="w-4 h-4 animate-spin" />
+                Memuat riwayat versi dari cloud…
+              </div>
+            ) : revisions.length === 0 ? (
               <div className="p-8 text-center bg-slate-50 rounded-2xl border border-dashed border-slate-300 text-slate-500">
                 <History className="w-8 h-8 mx-auto text-slate-400 mb-2" />
                 <p className="font-semibold text-sm">Belum ada snapshot cadangan tersimpan.</p>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Setiap kali Anda mengedit proyek ini di BoQ dan menyimpannya ke Library, versi sebelumnya akan dicatat di sini.
+                  Tekan Simpan di bar atas atau tombol di bawah untuk membuat titik versi yang bisa dipulihkan kapan saja.
                 </p>
                 <button
                   type="button"
@@ -235,20 +265,14 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
               revisions.map((rev, idx) => {
                 const isComparing = comparedRevId === rev.id;
                 const diff = (rev.grandTotal || 0) - (currentProject.grandTotal || 0);
-                const revDateStr = new Date(rev.timestamp).toLocaleDateString('id-ID', {
-                  day: 'numeric',
-                  month: 'short',
-                  year: 'numeric',
-                  hour: '2-digit',
-                  minute: '2-digit'
-                });
+                const revDateStr = formatDateTime(rev.timestamp);
 
                 return (
-                  <div 
+                  <div
                     key={rev.id}
                     className={`rounded-2xl border transition-all overflow-hidden ${
-                      isComparing 
-                        ? 'border-indigo-500 bg-indigo-50/20 shadow-sm' 
+                      isComparing
+                        ? 'border-indigo-500 bg-indigo-50/20 shadow-sm'
                         : 'border-slate-200 bg-white hover:border-slate-300'
                     }`}
                   >
@@ -268,13 +292,18 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                                 Snapshot Terbaru
                               </span>
                             )}
+                            {rev.auto && (
+                              <span className="text-[10px] font-mono bg-slate-100 text-slate-700 border border-slate-300 px-2 py-0.5 rounded font-semibold">
+                                Otomatis
+                              </span>
+                            )}
                           </div>
 
                           <p className="text-xs font-medium text-slate-800">
                             {rev.note || 'Pembaruan data RAB'}
                           </p>
                           <p className="text-[11px] text-slate-500 font-mono mt-0.5">
-                            {rev.filledItemsCount || 0} item terisi
+                            {rev.filledItemsCount || 0} item terisi{rev.by ? ` • oleh ${rev.by}` : ''}
                           </p>
                         </div>
 
@@ -311,8 +340,8 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                             type="button"
                             onClick={() => setComparedRevId(isComparing ? null : rev.id)}
                             className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all ${
-                              isComparing 
-                                ? 'bg-indigo-600 text-white' 
+                              isComparing
+                                ? 'bg-indigo-600 text-white'
                                 : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                             }`}
                           >
@@ -325,8 +354,10 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                           <button
                             type="button"
                             onClick={() => handleDownloadSnapshotJSON(rev)}
-                            className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors"
+                            disabled={!rev.stateSnapshot}
+                            className="p-1.5 rounded-xl border border-slate-200 hover:bg-slate-100 text-slate-600 transition-colors disabled:opacity-40"
                             title="Unduh file backup JSON snapshot ini"
+                            aria-label="Unduh snapshot JSON"
                           >
                             <Download className="w-3.5 h-3.5" />
                           </button>
@@ -337,6 +368,7 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                             onClick={() => handleDelete(rev.id)}
                             className="p-1.5 rounded-xl border border-rose-200 hover:bg-rose-50 text-rose-600 transition-colors"
                             title="Hapus snapshot ini dari riwayat"
+                            aria-label="Hapus snapshot"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
@@ -346,7 +378,8 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                         <button
                           type="button"
                           onClick={() => handleRollback(rev)}
-                          className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold font-display shadow-xs flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
+                          disabled={!rev.stateSnapshot}
+                          className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 text-xs font-bold font-display shadow-xs flex items-center gap-1.5 transition-all disabled:opacity-40"
                         >
                           <RotateCcw className="w-3.5 h-3.5" />
                           <span>Pulihkan (Rollback) ke BoQ</span>
@@ -394,10 +427,10 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                                       {formatRp(activeCatTotal)}
                                     </td>
                                     <td className={`py-2 px-3 text-right font-bold ${
-                                      catDiff === 0 
-                                        ? 'text-slate-400' 
-                                        : catDiff > 0 
-                                          ? 'text-emerald-700' 
+                                      catDiff === 0
+                                        ? 'text-slate-400'
+                                        : catDiff > 0
+                                          ? 'text-emerald-700'
                                           : 'text-rose-700'
                                     }`}>
                                       {catDiff === 0 ? '-' : (catDiff > 0 ? `+${formatRp(catDiff)}` : `-${formatRp(Math.abs(catDiff))}`)}
@@ -416,10 +449,10 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
                                   {formatRp(currentProject.grandTotal || 0)}
                                 </td>
                                 <td className={`py-2.5 px-3 text-right ${
-                                  diff === 0 
-                                    ? 'text-slate-400' 
-                                    : diff > 0 
-                                      ? 'text-emerald-700' 
+                                  diff === 0
+                                    ? 'text-slate-400'
+                                    : diff > 0
+                                      ? 'text-emerald-700'
                                       : 'text-rose-700'
                                 }`}>
                                   {diff === 0 ? 'Sama' : (diff > 0 ? `+${formatRp(diff)}` : `-${formatRp(Math.abs(diff))}`)}
@@ -441,7 +474,7 @@ export function ProjectRevisionModal({ project, isOpen, onClose }) {
         {/* Modal Footer */}
         <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
           <span className="text-xs text-slate-500">
-            Sistem mencatat riwayat versi lokal dan menyinkronkannya otomatis ke Cloud.
+            Riwayat versi tersimpan di cloud dan sama di semua perangkat.
           </span>
           <button
             type="button"

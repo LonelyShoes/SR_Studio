@@ -1,8 +1,8 @@
+# Netlify: build dari source. Header keamanan & cache ada di public/_headers,
+# fallback SPA di public/_redirects (keduanya ikut tersalin ke dist/).
 [build]
   publish = "dist"
   command = "npm run build"
 
-[[redirects]]
-  from = "/*"
-  to = "/index.html"
-  status = 200
+[build.environment]
+  NODE_VERSION = "22"

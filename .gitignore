@@ -1,14 +1,17 @@
 # Dependencies
 node_modules/
 
-# Build output (Vercel build ulang otomatis dari source)
+# Build output (Vercel/Netlify membangun ulang dari source)
 dist/
 *.zip
 
-# Env & lokal
+# Environment & tautan lokal
 .env
 .env.*
+!.env.example
 .vercel/
+
+# Log
 *.log
 npm-debug.log*
 
@@ -20,6 +23,3 @@ scratch/
 Thumbs.db
 .vscode/
 .idea/
-
-.vercel
-.env*

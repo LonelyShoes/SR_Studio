@@ -1,22 +1,31 @@
 {
   "name": "sr-studio-boq-tools",
   "private": true,
-  "version": "2.0.0",
+  "version": "3.0.0",
+  "description": "SR Studio — BoQ/RAB & kalkulator konstruksi dengan kolaborasi realtime (Firebase Realtime Database), PWA offline.",
   "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "lint": "eslint src --ext .js,.jsx",
+    "lint": "eslint src scripts --ext .js,.jsx,.mjs --max-warnings 0",
     "format": "prettier --write \"src/**/*.{js,jsx,css}\"",
-    "test": "vitest run"
+    "test": "vitest run",
+    "check": "npm run lint && npm run test && npm run build",
+    "package": "node scripts/package-dist.mjs",
+    "hash:master": "node scripts/hash-master-code.mjs",
+    "verify:cloud": "vite-node scripts/verify-cloud.mjs"
   },
   "dependencies": {
-    "clsx": "^2.1.1",
+    "@firebase/app": "^0.16.5",
+    "@firebase/database": "^1.1.5",
     "lucide-react": "^1.16.0",
+    "qrcode-generator": "^2.0.4",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "tailwind-merge": "^2.5.5",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {

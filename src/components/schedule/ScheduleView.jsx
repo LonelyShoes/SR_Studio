@@ -1,44 +1,52 @@
-import React, { useState, useMemo } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { 
-  TrendingUp, 
-  Calendar, 
-  Clock, 
-  Printer, 
-  RotateCcw, 
-  CheckCircle2, 
-  AlertTriangle, 
-  ArrowUpRight, 
-  ArrowDownRight, 
-  FileSpreadsheet, 
-  Layers, 
-  ChevronRight, 
-  Sliders, 
-  Sparkles,
+import {
+  TrendingUp,
+  Clock,
+  Printer,
+  RotateCcw,
+  CheckCircle2,
+  ArrowUpRight,
+  ArrowDownRight,
+  FileSpreadsheet,
   Info,
   CalendarDays,
   Percent,
-  CircleDollarSign
 } from 'lucide-react';
-import { formatRp, formatNumber, toRoman } from '../../utils/formatters';
+import { formatRp, toRoman } from '../../utils/formatters';
+
+// Geometri grafik Kurva S (konstan → di luar komponen agar stabil antar render).
+const chartW = 920;
+const chartH = 340;
+const padL = 55;
+const padR = 35;
+const padT = 30;
+const padB = 45;
+const plotW = chartW - padL - padR;
+const plotH = chartH - padT - padB;
+
+/** Posisi Y (px) untuk persentase kumulatif 0–100. */
+function getY(percentage) {
+  const clamped = Math.max(0, Math.min(100, percentage));
+  return padT + plotH - (clamped / 100) * plotH;
+}
 
 export function ScheduleView() {
-  const { 
-    state, 
-    subtotal, 
-    grandTotal, 
-    scheduleConfig, 
-    updateScheduleDuration, 
-    updateScheduleStartDate, 
-    updateCategorySchedule, 
-    updateActualProgress, 
+  const {
+    state,
+    subtotal,
+    grandTotal,
+    scheduleConfig,
+    updateScheduleDuration,
+    updateScheduleStartDate,
+    updateCategorySchedule,
+    updateActualProgress,
     resetScheduleToDefault,
     setScheduleModalOpen,
     setActiveTab
   } = useBoQ();
 
   const [hoveredWeek, setHoveredWeek] = useState(null);
-  const [activeViewMode, setActiveViewMode] = useState('both'); // 'both' | 'chart' | 'matrix'
 
   const durationWeeks = scheduleConfig.durationWeeks || 12;
   const startDateStr = scheduleConfig.startDate || state.project.date || new Date().toISOString().slice(0, 10);
@@ -69,7 +77,7 @@ export function ScheduleView() {
         startWeek: 1,
         endWeek: durationWeeks
       };
-      
+
       const startW = Math.max(1, Math.min(durationWeeks, sched.startWeek || 1));
       const endW = Math.max(startW, Math.min(durationWeeks, sched.endWeek || durationWeeks));
       const spanWeeks = Math.max(1, endW - startW + 1);
@@ -173,25 +181,10 @@ export function ScheduleView() {
     return filled[filled.length - 1];
   }, [scheduleData]);
 
-  // SVG Chart Geometry
-  const chartW = 920;
-  const chartH = 340;
-  const padL = 55;
-  const padR = 35;
-  const padT = 30;
-  const padB = 45;
-  const plotW = chartW - padL - padR;
-  const plotH = chartH - padT - padB;
-
-  const getX = (weekNum) => {
-    if (durationWeeks <= 1) return padL;
-    return padL + ((weekNum - 1) / (durationWeeks - 1)) * plotW;
-  };
-
-  const getY = (percentage) => {
-    const clamped = Math.max(0, Math.min(100, percentage));
-    return padT + plotH - (clamped / 100) * plotH;
-  };
+  const getX = useCallback(
+    (weekNum) => (durationWeeks <= 1 ? padL : padL + ((weekNum - 1) / (durationWeeks - 1)) * plotW),
+    [durationWeeks]
+  );
 
   // SVG Paths
   const planPath = useMemo(() => {
@@ -207,7 +200,7 @@ export function ScheduleView() {
       const cx = (prevX + x) / 2;
       return `${path} C ${cx} ${prevY}, ${cx} ${y}, ${x} ${y}`;
     }, '');
-  }, [scheduleData.weeks, durationWeeks]);
+  }, [scheduleData.weeks, getX]);
 
   const planAreaPath = useMemo(() => {
     if (!planPath) return '';
@@ -215,7 +208,7 @@ export function ScheduleView() {
     const firstX = getX(1);
     const bottomY = getY(0);
     return `${planPath} L ${lastX} ${bottomY} L ${firstX} ${bottomY} Z`;
-  }, [planPath, durationWeeks]);
+  }, [planPath, durationWeeks, getX]);
 
   const actualPath = useMemo(() => {
     const actualWeeks = scheduleData.weeks.filter(w => w.actualCum !== null);
@@ -226,7 +219,7 @@ export function ScheduleView() {
       if (i === 0) return `M ${x} ${y}`;
       return `${path} L ${x} ${y}`;
     }, '');
-  }, [scheduleData.weeks, durationWeeks]);
+  }, [scheduleData.weeks, getX]);
 
   // Temukan minggu perkiraan Termin
   const termin1Week = useMemo(() => {
@@ -241,7 +234,7 @@ export function ScheduleView() {
 
   return (
     <div className="space-y-6 pb-20 max-w-7xl mx-auto px-2 sm:px-4">
-      
+
       {/* ==================== 1. EXECUTIVE HERO BANNER ==================== */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-5 sm:p-7 border border-slate-800 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-80 h-80 bg-blue-600/15 rounded-full blur-3xl pointer-events-none" />
@@ -253,7 +246,7 @@ export function ScheduleView() {
               <TrendingUp className="w-3.5 h-3.5" />
               <span>TIME SCHEDULE & S-CURVE GENERATOR TA 2026</span>
             </div>
-            
+
             <h1 className="text-xl sm:text-2xl lg:text-3xl font-heading font-black tracking-tight text-white">
               Kurva S & Jadwal Pelaksanaan Proyek
             </h1>
@@ -309,7 +302,7 @@ export function ScheduleView() {
 
       {/* ==================== 2. EXECUTIVE KPI CARDS & TIME CONFIG ==================== */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        
+
         {/* Card 1: Durasi Pelaksanaan */}
         <div className="bg-white rounded-2xl p-4 sm:p-5 border border-paper-300 shadow-sm relative overflow-hidden flex flex-col justify-between">
           <div className="flex items-center justify-between">
@@ -339,8 +332,8 @@ export function ScheduleView() {
                   type="button"
                   onClick={() => updateScheduleDuration(w)}
                   className={`px-1.5 py-0.5 rounded text-[10px] font-mono font-bold transition-colors ${
-                    durationWeeks === w 
-                      ? 'bg-blue-600 text-white' 
+                    durationWeeks === w
+                      ? 'bg-blue-600 text-white'
                       : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 >
@@ -372,9 +365,9 @@ export function ScheduleView() {
           {/* Start Date Picker Input */}
           <div className="pt-2 border-t border-slate-100 flex items-center justify-between text-xs">
             <span className="text-[10px] text-slate-400">Mulai Kerja:</span>
-            <input 
-              type="date" 
-              value={startDateStr} 
+            <input
+              type="date"
+              value={startDateStr}
               onChange={(e) => updateScheduleStartDate(e.target.value)}
               className="text-[11px] font-mono text-slate-700 bg-slate-50 px-2 py-0.5 rounded border border-slate-200 focus:outline-none focus:border-blue-500"
             />
@@ -475,12 +468,12 @@ export function ScheduleView() {
 
       {/* ==================== 3. INTERACTIVE SVG S-CURVE CHART ==================== */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 border border-paper-300 shadow-xl relative">
-        
+
         {/* Chart Header & Legend */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-4 border-b border-slate-100">
           <div>
             <h2 className="text-base sm:text-lg font-heading font-black text-slate-900 flex items-center gap-2">
-              Grafik Kurva "S" Pelaksanaan Pekerjaan
+              Grafik Kurva &quot;S&quot; Pelaksanaan Pekerjaan
               <span className="px-2 py-0.5 rounded text-[10px] font-mono uppercase bg-blue-50 text-blue-700 border border-blue-200">
                 0% - 100%
               </span>
@@ -496,7 +489,7 @@ export function ScheduleView() {
               <span className="w-4 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"></span>
               <span className="font-semibold text-slate-700">Rencana Kumulatif</span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <span className="w-4 h-1 bg-emerald-500 rounded-full border border-emerald-600"></span>
               <span className="font-semibold text-slate-700">Realisasi Lapangan</span>
@@ -511,8 +504,8 @@ export function ScheduleView() {
 
         {/* SVG Canvas */}
         <div className="relative overflow-x-auto custom-scrollbar pt-2">
-          <svg 
-            viewBox={`0 0 ${chartW} ${chartH}`} 
+          <svg
+            viewBox={`0 0 ${chartW} ${chartH}`}
             className="w-full h-auto min-w-[700px] select-none"
           >
             <defs>
@@ -535,21 +528,21 @@ export function ScheduleView() {
               const y = getY(pct);
               return (
                 <g key={pct}>
-                  <line 
-                    x1={padL} 
-                    y1={y} 
-                    x2={chartW - padR} 
-                    y2={y} 
-                    stroke="#e2e8f0" 
-                    strokeWidth={pct === 0 || pct === 100 ? "1.5" : "1"} 
+                  <line
+                    x1={padL}
+                    y1={y}
+                    x2={chartW - padR}
+                    y2={y}
+                    stroke="#e2e8f0"
+                    strokeWidth={pct === 0 || pct === 100 ? "1.5" : "1"}
                     strokeDasharray={pct === 0 || pct === 100 ? "none" : "4 4"}
                   />
-                  <text 
-                    x={padL - 10} 
-                    y={y + 4} 
-                    textAnchor="end" 
-                    fontSize="11" 
-                    fontFamily="monospace" 
+                  <text
+                    x={padL - 10}
+                    y={y + 4}
+                    textAnchor="end"
+                    fontSize="11"
+                    fontFamily="monospace"
                     fill="#64748b"
                   >
                     {pct}%
@@ -563,21 +556,21 @@ export function ScheduleView() {
               const x = getX(w.weekNum);
               return (
                 <g key={w.weekNum}>
-                  <line 
-                    x1={x} 
-                    y1={padT} 
-                    x2={x} 
-                    y2={padT + plotH} 
-                    stroke="#f1f5f9" 
+                  <line
+                    x1={x}
+                    y1={padT}
+                    x2={x}
+                    y2={padT + plotH}
+                    stroke="#f1f5f9"
                     strokeWidth="1"
                   />
-                  <text 
-                    x={x} 
-                    y={padT + plotH + 20} 
-                    textAnchor="middle" 
-                    fontSize="11" 
-                    fontWeight="600" 
-                    fontFamily="monospace" 
+                  <text
+                    x={x}
+                    y={padT + plotH + 20}
+                    textAnchor="middle"
+                    fontSize="11"
+                    fontWeight="600"
+                    fontFamily="monospace"
                     fill={hoveredWeek?.weekNum === w.weekNum ? "#0f172a" : "#64748b"}
                   >
                     M{w.weekNum}
@@ -593,24 +586,24 @@ export function ScheduleView() {
 
             {/* Garis Kurva Rencana */}
             {planPath && (
-              <path 
-                d={planPath} 
-                fill="none" 
-                stroke="url(#planStrokeGradient)" 
-                strokeWidth="3.5" 
-                strokeLinecap="round" 
+              <path
+                d={planPath}
+                fill="none"
+                stroke="url(#planStrokeGradient)"
+                strokeWidth="3.5"
+                strokeLinecap="round"
                 strokeLinejoin="round"
               />
             )}
 
             {/* Garis Kurva Realisasi Lapangan */}
             {actualPath && (
-              <path 
-                d={actualPath} 
-                fill="none" 
-                stroke="#10b981" 
-                strokeWidth="3.5" 
-                strokeLinecap="round" 
+              <path
+                d={actualPath}
+                fill="none"
+                stroke="#10b981"
+                strokeWidth="3.5"
+                strokeLinecap="round"
                 strokeLinejoin="round"
                 strokeDasharray="1 0"
               />
@@ -619,13 +612,13 @@ export function ScheduleView() {
             {/* Marker Titik Termin Pembayaran (TOP) */}
             {/* Termin 1: 50% */}
             <g>
-              <line 
-                x1={getX(termin1Week)} 
-                y1={getY(0)} 
-                x2={getX(termin1Week)} 
-                y2={getY(50)} 
-                stroke="#f59e0b" 
-                strokeWidth="1.5" 
+              <line
+                x1={getX(termin1Week)}
+                y1={getY(0)}
+                x2={getX(termin1Week)}
+                y2={getY(50)}
+                stroke="#f59e0b"
+                strokeWidth="1.5"
                 strokeDasharray="3 3"
               />
               <circle cx={getX(termin1Week)} cy={getY(50)} r="5" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
@@ -636,13 +629,13 @@ export function ScheduleView() {
 
             {/* Termin 2: 80% */}
             <g>
-              <line 
-                x1={getX(termin2Week)} 
-                y1={getY(0)} 
-                x2={getX(termin2Week)} 
-                y2={getY(80)} 
-                stroke="#f59e0b" 
-                strokeWidth="1.5" 
+              <line
+                x1={getX(termin2Week)}
+                y1={getY(0)}
+                x2={getX(termin2Week)}
+                y2={getY(80)}
+                stroke="#f59e0b"
+                strokeWidth="1.5"
                 strokeDasharray="3 3"
               />
               <circle cx={getX(termin2Week)} cy={getY(80)} r="5" fill="#f59e0b" stroke="#ffffff" strokeWidth="2" />
@@ -658,7 +651,7 @@ export function ScheduleView() {
               const isHovered = hoveredWeek?.weekNum === w.weekNum;
 
               return (
-                <g 
+                <g
                   key={w.weekNum}
                   onMouseEnter={() => setHoveredWeek(w)}
                   onMouseLeave={() => setHoveredWeek(null)}
@@ -666,26 +659,26 @@ export function ScheduleView() {
                 >
                   {/* Invisible broad hitbox */}
                   <circle cx={x} cy={y} r="18" fill="transparent" />
-                  
+
                   {/* Visual Point */}
-                  <circle 
-                    cx={x} 
-                    cy={y} 
-                    r={isHovered ? "6" : "4"} 
-                    fill="#ffffff" 
-                    stroke="#2563eb" 
-                    strokeWidth={isHovered ? "3" : "2"} 
+                  <circle
+                    cx={x}
+                    cy={y}
+                    r={isHovered ? "6" : "4"}
+                    fill="#ffffff"
+                    stroke="#2563eb"
+                    strokeWidth={isHovered ? "3" : "2"}
                     className="transition-all"
                   />
 
                   {/* Point for Actual if exists */}
                   {w.actualCum !== null && (
-                    <circle 
-                      cx={x} 
-                      cy={getY(w.actualCum)} 
-                      r={isHovered ? "6" : "4"} 
-                      fill="#10b981" 
-                      stroke="#ffffff" 
+                    <circle
+                      cx={x}
+                      cy={getY(w.actualCum)}
+                      r={isHovered ? "6" : "4"}
+                      fill="#10b981"
+                      stroke="#ffffff"
                       strokeWidth="2"
                     />
                   )}
@@ -696,7 +689,7 @@ export function ScheduleView() {
 
           {/* Interactive Hover HUD Tooltip */}
           {hoveredWeek && (
-            <div 
+            <div
               className="absolute z-20 bg-slate-950/95 text-white p-3 rounded-2xl shadow-2xl border border-slate-700 pointer-events-none text-xs backdrop-blur-md min-w-[220px]"
               style={{
                 left: `${Math.max(10, Math.min(85, (hoveredWeek.weekNum / durationWeeks) * 100))}%`,
@@ -721,7 +714,7 @@ export function ScheduleView() {
                   <span className="text-slate-400">Kumulatif Rencana:</span>
                   <span className="font-mono font-black text-blue-400">{hoveredWeek.planCum.toFixed(2)}%</span>
                 </div>
-                
+
                 {hoveredWeek.actualCum !== null && (
                   <>
                     <div className="flex justify-between border-t border-slate-800/80 pt-1">
@@ -754,7 +747,7 @@ export function ScheduleView() {
 
       {/* ==================== 4. TIME SCHEDULE MATRIX & GANTT TABLE ==================== */}
       <div className="bg-white rounded-3xl p-5 sm:p-7 border border-paper-300 shadow-xl">
-        
+
         {/* Table Controls Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200">
           <div>
@@ -846,11 +839,11 @@ export function ScheduleView() {
                       const isActive = w.weekNum >= cat.startWeek && w.weekNum <= cat.endWeek;
 
                       return (
-                        <td 
-                          key={w.weekNum} 
+                        <td
+                          key={w.weekNum}
                           className={`py-1.5 px-1 text-center border-r border-slate-200 font-mono text-[10px] transition-colors ${
-                            isActive 
-                              ? 'bg-blue-50/80 font-bold text-blue-900' 
+                            isActive
+                              ? 'bg-blue-50/80 font-bold text-blue-900'
                               : 'text-slate-300'
                           }`}
                         >
@@ -871,7 +864,7 @@ export function ScheduleView() {
 
             {/* Table Summary & Actual Tracking Rows */}
             <tfoot className="border-t-2 border-slate-900 font-bold">
-              
+
               {/* Row 1: Rencana Mingguan (%) */}
               <tr className="bg-slate-100 text-slate-900">
                 <td colSpan={2} className="py-2 px-3 text-right uppercase sticky left-0 bg-slate-100 z-10 border-r border-slate-300">
@@ -959,8 +952,8 @@ export function ScheduleView() {
                 </td>
                 <td className="border-r border-slate-300 bg-slate-200"></td>
                 {scheduleData.weeks.map(w => (
-                  <td 
-                    key={w.weekNum} 
+                  <td
+                    key={w.weekNum}
                     className={`py-2 px-1 text-center font-mono font-black border-r border-slate-300 text-[10.5px] ${
                       w.deviasi === null
                         ? 'text-slate-400'

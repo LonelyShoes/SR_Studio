@@ -1,25 +1,19 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
 import { formatNumber, parseNum, calcRebarWeightPerM } from '../../utils/formatters';
-import { 
-  ArrowLeft, 
-  Send, 
-  Plus, 
-  Trash2, 
-  Layers, 
+import {
+  ArrowLeft,
+  Send,
+  Plus,
+  Trash2,
+  Layers,
   Info,
-  Check,
   Scissors,
-  DollarSign,
   Boxes,
-  HelpCircle,
-  Sliders,
   Sparkles,
   Printer,
   ChevronDown,
   ChevronUp,
-  CheckSquare,
-  Square
 } from 'lucide-react';
 
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
@@ -127,14 +121,14 @@ export function calculateFFD(cuts, standardLength = 12, lapFactor = 40) {
 }
 
 export function RebarCalculator() {
-  const { 
-    setActiveTab, 
-    queueCalculatedItems, 
-    showToast, 
-    clusterUnits, 
-    updateClusterUnits, 
-    clusterTypology, 
-    clusterRowUnits 
+  const {
+    setActiveTab,
+    queueCalculatedItems,
+    showToast,
+    clusterUnits,
+    updateClusterUnits,
+    clusterTypology,
+    clusterRowUnits
   } = useBoQ();
   const [clusterApplyMode, setClusterApplyMode] = usePersistentState('sr_calc_rb_cluster_mode', 'multiplied');
 
@@ -171,7 +165,7 @@ export function RebarCalculator() {
   const [hargaPolos, setHargaPolos] = usePersistentState('sr_calc_rb_harga_polos', '');
   const [hargaUlir, setHargaUlir] = usePersistentState('sr_calc_rb_harga_ulir', '');
   const [hargaBendrat, setHargaBendrat] = usePersistentState('sr_calc_rb_harga_bendrat', '');
-  const [koefBendrat, setKoefBendrat] = usePersistentState('sr_calc_rb_koef_bendrat', '0.015'); // 1.5% SNI 7394:2008
+  const [koefBendrat] = usePersistentState('sr_calc_rb_koef_bendrat', '0.015'); // 1.5% SNI 7394:2008
 
   // BoQ dispatch mode: 'kg' | 'lonjor'
   const [dispatchUnit, setDispatchUnit] = usePersistentState('sr_calc_rb_dispatch_unit', 'kg');
@@ -325,13 +319,13 @@ export function RebarCalculator() {
       if (!groups[key]) {
         let labelName = '';
         if (combineMainAndStirrupWaste) {
-          labelName = cut.type === 'ulir' 
-            ? `D${cut.diameter} Ulir (Pokok + Sengkang)` 
+          labelName = cut.type === 'ulir'
+            ? `D${cut.diameter} Ulir (Pokok + Sengkang)`
             : `Ø${cut.diameter} Polos (Pokok + Sengkang)`;
         } else {
           const roleLabel = isStirrup ? 'Sengkang' : 'Tulangan Pokok';
-          labelName = cut.type === 'ulir' 
-            ? `D${cut.diameter} Ulir (${roleLabel})` 
+          labelName = cut.type === 'ulir'
+            ? `D${cut.diameter} Ulir (${roleLabel})`
             : `Ø${cut.diameter} Polos (${roleLabel})`;
         }
 
@@ -361,7 +355,7 @@ export function RebarCalculator() {
       const theoreticalLonjor = g.totalPanjang / 12;
       const actualLonjor = ffd.totalLonjor;
       const totalWeightLonjor = actualLonjor * 12 * calcRebarWeightPerM(g.diameter);
-      const wastePct = actualLonjor > 0 
+      const wastePct = actualLonjor > 0
         ? Math.max(0, ((actualLonjor * 12 - g.totalPanjang) / (actualLonjor * 12)) * 100)
         : 0;
 
@@ -397,7 +391,7 @@ export function RebarCalculator() {
     const pBendrat = parseNum(hargaBendrat);
 
     const mult = clusterApplyMode === 'multiplied' ? Math.max(1, clusterUnits || 1) : 1;
-    const clusterSuffix = mult > 1 
+    const clusterSuffix = mult > 1
       ? (clusterTypology === 'shared'
           ? ` [Total ${mult} Unit Cluster · Dinding Bersama]`
           : ` [Total ${mult} Unit Cluster · Dinding Ganda]`)
@@ -422,7 +416,7 @@ export function RebarCalculator() {
         });
       } else {
         // Lonjor / Batang 12m
-        const pricePerBatang = unitPrice > 0 
+        const pricePerBatang = unitPrice > 0
           ? Math.round(unitPrice * (12 * calcRebarWeightPerM(g.diameter)))
           : 0;
 
@@ -519,7 +513,7 @@ export function RebarCalculator() {
       {/* Header Banner */}
       <div className="relative overflow-hidden rounded-3xl bg-slate-900 text-white p-4 sm:p-7 border border-slate-800 shadow-2xl">
         <div className="absolute -top-24 -right-24 w-72 sm:w-80 h-72 sm:h-80 bg-indigo-500/15 rounded-full blur-3xl pointer-events-none" />
-        
+
         <div className="relative z-10 space-y-3 sm:space-y-4">
           <div className="flex items-center justify-between gap-3">
             <div className="inline-flex items-center gap-2 px-2.5 sm:px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-[11px] sm:text-xs font-mono font-bold tracking-wide truncate">
@@ -549,7 +543,7 @@ export function RebarCalculator() {
       </div>
 
       {/* REUSABLE CLUSTER MULTIPLIER TOOLBAR */}
-      <ClusterMultiplierBar 
+      <ClusterMultiplierBar
         multiplier={clusterUnits}
         onChange={updateClusterUnits}
         applyMode={clusterApplyMode}
@@ -570,7 +564,7 @@ export function RebarCalculator() {
         </p>
 
         <form onSubmit={handleAddElement} className="space-y-4">
-          
+
           {/* Main Attributes */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3.5 p-4 rounded-xl bg-paper-50 border border-paper-200">
             <div>
@@ -1061,7 +1055,7 @@ export function RebarCalculator() {
       {/* ==================== TOGGLE & SMART REBAR CUT-LIST OPTIMIZER ==================== */}
       {groupSummaries.length > 0 && (
         <div className="rounded-3xl bg-white border border-paper-300 p-5 sm:p-6 shadow-sm mb-6 space-y-5">
-          
+
           {/* Header Section */}
           <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-paper-200">
             <div className="flex items-center gap-3">
@@ -1111,7 +1105,7 @@ export function RebarCalculator() {
                   )}
                 </div>
                 <p className="text-xs text-slate-600 leading-relaxed">
-                  Gunakan sisa potongan lonjor 12m tulangan pokok untuk memotong sengkang/begel. 
+                  Gunakan sisa potongan lonjor 12m tulangan pokok untuk memotong sengkang/begel.
                   <strong className="text-slate-900"> Hanya berlaku bila ukuran diameter besi sengkang sama dengan tulangan pokok</strong> (contoh: sama-sama Ø8mm atau Ø10mm).
                 </p>
               </div>
@@ -1161,17 +1155,17 @@ export function RebarCalculator() {
 
           {/* VISUAL CUT-LIST DIAGRAM PER GRUP BESI */}
           <div className="space-y-4 pt-2">
-            {groupSummaries.map((g, gIdx) => {
+            {groupSummaries.map((g) => {
               const isUlir = g.type === 'ulir';
               const isExpanded = expandedPatternGroups[g.key] !== false; // default true
 
               return (
-                <div 
-                  key={g.key} 
+                <div
+                  key={g.key}
                   className="rounded-2xl border border-paper-300 bg-paper-50/50 overflow-hidden"
                 >
                   {/* Group Header */}
-                  <div 
+                  <div
                     onClick={() => setExpandedPatternGroups(prev => ({ ...prev, [g.key]: !isExpanded }))}
                     className="p-3.5 sm:p-4 bg-white hover:bg-paper-100/80 cursor-pointer flex flex-wrap items-center justify-between gap-3 border-b border-paper-200 transition-colors"
                   >
@@ -1208,7 +1202,7 @@ export function RebarCalculator() {
                         g.patterns.map((pat, pIdx) => {
                           return (
                             <div key={pat.key || pIdx} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
-                              
+
                               {/* Pattern Title & Bar Summary */}
                               <div className="flex flex-wrap items-center justify-between text-xs font-mono gap-2">
                                 <div className="flex items-center gap-2">
@@ -1236,10 +1230,10 @@ export function RebarCalculator() {
                                       key={pcIdx}
                                       style={{ width: `${widthPct}%` }}
                                       className={`h-full border-r border-white/70 flex items-center justify-center text-[10px] font-mono font-bold text-white transition-all hover:opacity-90 relative ${
-                                        isStirrup 
-                                          ? 'bg-emerald-600' 
-                                          : isAnchor 
-                                            ? 'bg-purple-600' 
+                                        isStirrup
+                                          ? 'bg-emerald-600'
+                                          : isAnchor
+                                            ? 'bg-purple-600'
                                             : 'bg-blue-600'
                                       }`}
                                       title={`${pc.role}: ${formatNumber(pc.length, 2)}m`}
@@ -1277,8 +1271,8 @@ export function RebarCalculator() {
                                     return acc;
                                   }, {})
                                 ).map(([label, count]) => (
-                                  <span 
-                                    key={label} 
+                                  <span
+                                    key={label}
                                     className="px-2 py-0.5 rounded-lg bg-white border border-slate-300 font-mono font-bold text-slate-800 shadow-2xs"
                                   >
                                     {count}x {label}
@@ -1427,8 +1421,8 @@ export function RebarCalculator() {
               {groupSummaries.map(g => {
                 const isUlir = g.type === 'ulir';
                 const isChecked = selectedGroups[g.key] !== false;
-                const valText = dispatchUnit === 'kg' 
-                  ? `${formatNumber(g.totalBerat, 1)} kg` 
+                const valText = dispatchUnit === 'kg'
+                  ? `${formatNumber(g.totalBerat, 1)} kg`
                   : `${g.totalLonjor} batang`;
 
                 return (

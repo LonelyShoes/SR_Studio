@@ -1,21 +1,16 @@
 import React, { useState, useMemo } from 'react';
 import { useBoQ } from '../../context/BoQContext';
-import { formatNumber, parseNum, formatRp } from '../../utils/formatters';
+import { parseNum, formatRp } from '../../utils/formatters';
 import { ClusterMultiplierBar } from '../common/ClusterMultiplierBar';
 import { usePersistentState } from '../../hooks/usePersistentCalculatorState';
-import { 
-  ArrowLeft, 
-  DoorOpen, 
-  Send, 
-  Layers, 
-  Check, 
-  Plus, 
-  Trash2, 
-  Info, 
-  Sparkles, 
-  Sliders,
-  DollarSign,
-  Maximize2
+import {
+  ArrowLeft,
+  DoorOpen,
+  Send,
+  Plus,
+  Trash2,
+  Info,
+  Maximize2,
 } from 'lucide-react';
 
 const INITIAL_OPENINGS = [
@@ -62,9 +57,9 @@ export function DoorWindowCalculator() {
   const [newCode, setNewCode] = useState('');
   const [newName, setNewName] = useState('');
   const [newType, setNewType] = useState('door');
-  const [newWidth, setNewWidth] = useState('0.90');
-  const [newHeight, setNewHeight] = useState('2.10');
-  const [newQty, setNewQty] = useState('1');
+  const [newWidth] = useState('0.90');
+  const [newHeight] = useState('2.10');
+  const [newQty] = useState('1');
   const [newIsHookOnly, setNewIsHookOnly] = useState(false);
 
   // Update opening row field
@@ -622,8 +617,8 @@ export function DoorWindowCalculator() {
                     </div>
                     <div className="text-[11px] text-slate-500 font-mono">
                       {kusenDispatchUnit === 'batang' 
-                        ? <>Volume: <strong>{Math.ceil(totals.totalKusenMeter / 6.0)} Batang (6m)</strong> ({totals.totalKusenMeter.toFixed(2)} m')</>
-                        : <>Keliling: <strong>{totals.totalKusenMeter.toFixed(2)} m'</strong> (termasuk waste 5%)</>}
+                        ? <>Volume: <strong>{Math.ceil(totals.totalKusenMeter / 6.0)} Batang (6m)</strong> ({totals.totalKusenMeter.toFixed(2)} m&apos;)</>
+                        : <>Keliling: <strong>{totals.totalKusenMeter.toFixed(2)} m&apos;</strong> (termasuk waste 5%)</>}
                     </div>
                   </div>
                 </label>
@@ -789,7 +784,7 @@ export function DoorWindowCalculator() {
                   onClick={() => setKusenDispatchUnit('meter')}
                   className={`px-3 py-1 rounded-md font-bold transition-all ${kusenDispatchUnit === 'meter' ? 'bg-sky-700 text-white shadow-xs' : 'text-sky-800 hover:bg-sky-100'}`}
                 >
-                  Meter (m') — Keliling Terpasang
+                  Meter (m&apos;) — Keliling Terpasang
                 </button>
                 <button
                   type="button"
@@ -902,7 +897,7 @@ export function DoorWindowCalculator() {
             <div className="space-y-2 text-xs">
               <div className="flex justify-between p-2.5 rounded-xl bg-sky-50 border border-sky-100">
                 <span className="text-slate-600">Total Keliling Kusen:</span>
-                <span className="font-mono font-bold text-sky-950">{totals.totalKusenMeter.toFixed(2)} m'</span>
+                <span className="font-mono font-bold text-sky-950">{totals.totalKusenMeter.toFixed(2)} m&apos;</span>
               </div>
 
               <div className="flex justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
@@ -921,7 +916,7 @@ export function DoorWindowCalculator() {
               </div>
 
               <div className="flex justify-between p-2.5 rounded-xl bg-slate-50 border border-slate-200">
-                <span className="text-slate-600">Engsel Pintu 4":</span>
+                <span className="text-slate-600">Engsel Pintu 4&quot;:</span>
                 <span className="font-mono font-bold text-slate-900">{totals.totalEngselPintu} Buah</span>
               </div>
 

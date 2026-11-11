@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building, Layers, Check, Sparkles, ShieldAlert, ArrowRight, HelpCircle } from 'lucide-react';
+import { Building, Sparkles, HelpCircle } from 'lucide-react';
 import { useBoQ } from '../../context/BoQContext';
 
 export function ClusterMultiplierBar({
@@ -178,7 +178,7 @@ export function ClusterMultiplierBar({
                 <strong>Dinding Ganda (2 Dinding):</strong> Di batas tanah terdapat 2 jalur sloof dan 2 baris kolom praktis mandiri.
               </p>
               <p className="text-[11px] text-slate-300 leading-relaxed">
-                <strong>Dinding Bersama (1 Dinding):</strong> Di as perbatasan hanya <strong>dicor 1 baris sloof dan 1 kolom bersama</strong>. Saat input sloof/kolom, pilih <em>"Struktur Batas Kavling"</em> agar volumenya otomatis disesuaikan secara proporsional.
+                <strong>Dinding Bersama (1 Dinding):</strong> Di as perbatasan hanya <strong>dicor 1 baris sloof dan 1 kolom bersama</strong>. Saat input sloof/kolom, pilih <em>&quot;Struktur Batas Kavling&quot;</em> agar volumenya otomatis disesuaikan secara proporsional.
               </p>
             </div>
 
